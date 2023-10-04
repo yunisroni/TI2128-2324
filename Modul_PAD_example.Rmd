@@ -245,12 +245,11 @@ Setelah kita bagi, maka bisa dijelaskan bahwa untuk data training ada 701 baris 
 ```{r}
 modelTree <- rpart(data=data.train,
                foreign_worker~.,
-               control = rpart.control(cp=0, minsplit=15))
+               control = rpart.control(cp=0, minsplit=15)) #node kurang dari 15 algoritma dihentikan
 ```
-opsi minsplit = 15 memgandung pengertian bahwa jika ada node yang berukuran kurang dari 15, maka algoritma dihentikan
-
 
 ```{r}
+# Menampilkan hasil model Tree
 modelTree
 ```
 ### Visualisasi Model Klasifikasi
@@ -308,6 +307,7 @@ modelForest <- randomForest(data=data.train,
 ```
 
 ```{r}
+# Menampilkan hasil model Forest
 modelForest
 ```
 Tingkat kesalahan sebesar 3,71% atau dengan akurasi sebesar 96,29%
