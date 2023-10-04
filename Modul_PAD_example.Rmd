@@ -1,0 +1,348 @@
+---
+title: "Process Analytical Data"
+author: "Roni Yunis"
+date: "9/06/2023"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Pengantar
+Dalam pembahasan kali ini, kita akan membahas secara umum proses analitikal data. Tujuan dari analitika data adalah untuk mendapatkan informasi dari data sehingga dapat membuat keputusan binis yang tepat. Dalam proses analitikal data ada beberapa tahapan yang harus dilalui yaitu:
+1. Memahami masalah bisnis
+2. Mengumpulkan data dan mengintegrasikan data
+3. Pra Proses data
+4. Ekplorasi dan visualisasi data
+5. Menentukan teknik pemodelan atau algaritma
+6. Evaluasi model
+7. Laporkan hasilnya kepada pihak manajemen
+8. Kembangkan model
+
+Dari 8 tahapan tersebut, tahapan yang sangat penting dan berpengaruh pada hasil pengembangan model keputusan adalah tahap **Exploratory Data Analysis (EDA)**. EDA adalah proses ekplorasi data yang bertujuan untuk memahami isi dan komponen penyusun data. Biasanya EDA dilakukan dengan beberapa cara; *analisis deskriptif dengan satu variabel*, *analisis relasi dengan dua variabel*, dan *analisis dengan menggunakan lebih dari atau sama dengan tiga variabel.* 
+
+# Contoh Implementasi Proses Analitikal Data
+Berikut akan diuraikan bagaimana proses analitikal data berdasarkan tahapan-tahapan sebelumnya pada sebuah dataset `online retail`. Dalam contoh ini dianggap bahwa tahapan 1-3 sudah dilakukan dengan lengkap.
+
+# Load Packages
+Untuk mendukung klasifikasi yang akan dilakukan, maka ada beberapa packages/library yang diperlukan.
+```{r}
+# Package untuk manipulasi data
+library(dplyr)
+# Package untuk visualisasi data
+library (ggplot2)
+# package untuk praktisi data
+library(caret)
+# package untuk klasifikasi
+library(randomForest)
+# package untuk mengukur perfomansi model klasifikasi
+library(e1071)
+# package untuk menguji kehandalan dari model prediksi
+library(ROCit)
+# package untuk decision tree
+library(rpart)
+# pakage untuk memodelkan pohon keputusan
+library(rpart.plot)
+```
+
+# Ekplorasi Data Analisis
+Dalam EDA, secara sederhana ada 4 aktivitas yang akan dilakukan, yaitu: menyiapkan data, membersihkan data, Ekplorasi data, dan visualisasi data. Sebelum kita memulai 4 tahapan tersebut, ada beberapa library yang kita perlukan, yaitu `dplyr`, `lubridate` dan `ggplot2`
+
+## Data Preparation
+Import data dan melihat struktur data
+```{r}
+credit <- read.csv("data/credit.csv")
+glimpse(credit)
+```
+
+Melihat ringkasan dari data
+```{r}
+summary(credit)
+```
+
+Melihat 6 baris teratas dari data credit
+```{r}
+head(credit)
+```
+
+Melihat 6 baris terakhir dari data credit
+```{r}
+tail(credit)
+```
+
+Kalau kita lihat ada beberapa variabel yang type datanya kategorical, yaitu variabel `checking_balance`, `saving_balance`, `employment_length`, `personal_status`, `other_debtors`, `property`, `installment_plan`, `housing`, `telephone`, `foreign_worker`, `credit_history`, `purpose`, dan `job`
+
+## Membersihkan Data
+Melihat data kosong atau missing value (NA's)
+```{r}
+colSums(is.na(credit))
+```
+Bisa dilihat bahwa tidak ada data kosong atau NA's
+
+## Ekplorasi Data
+Kita lanjutkan melihat kategorikal dari beberapa variabel`
+```{r}
+# melihat kategori dari checking_balance
+table(credit$checking_balance)
+```
+Bisa dilihat ada 4 kategori, yaitu <0, 1-200, >200, dan unknown
+
+```{r}
+# melihat kategori dari savings_balance
+table(credit$savings_balance)
+```
+Bisa dilihat ada 5 kategori, <100, 101-500, 501-100, >1000, dan unknown
+
+```{r}
+# melihat kategori dari housing
+table(credit$housing)
+```
+Ternyata housing terbanyak adalah untuk kategori _own_
+
+```{r}
+# melihat kategori dari property
+table(credit$property)
+```
+
+```{r}
+# Melihat kategori dari month_loan_duration dan purpose
+table(credit$months_loan_duration, credit$purpose)
+```
+
+```{r}
+# melihat kategori purpose
+table(credit$purpose)
+```
+Bisa dilihat ada 10 kategori. Kategori yang paling banyak adalah _radio/tv_
+
+```{r}
+# melihat kategori dari foreign worker
+table(credit$foreign_worker)
+```
+Ternyata kategori untuk pekerja asing yang paling banyak yaitu sebanyak 963
+
+```{r}
+# melihat kategori credit_history
+table(credit$credit_history)
+```
+
+Kategori credit history yang paling banyak adalah _repaid_.
+
+```{r}
+# melihat asosiasi antara purpose dan credit history
+table(credit$purpose, credit$credit_history)
+
+```
+Ternyata bisa dilihat bahwa _repaid_ dan untuk tujuan _radio/tv_ adalah yang paling banyak yaitu sebanyak 167
+
+kita akan filter, credit purpose berdasarkan "radio/tv"
+```{r}
+radiotv <- filter(credit, purpose == "radio/tv")
+head(radiotv)
+```
+Kita akan melihat berapa banyak pekerja asing yang mengajukan credit utk tujuan _radio/tv_
+
+```{r}
+radiotv %>% 
+  group_by(foreign_worker) %>% 
+  count() %>% 
+  arrange(-n)
+
+```
+Bisa kita lihat bahwa pekerja asing dengan tujuan credit utk radio/tv ada sebanyak 275
+
+Sekarang kita akan melihat berapa jumlah pengajuan credit dilihat dari jenis pekerjaan (job)
+
+```{r}
+radiotv %>% 
+  group_by(job) %>% 
+  count() %>% 
+  arrange(-n) 
+```
+Jenis pekerjaan yang paling banyak mengajukan credit utk radio/tv adalah *skilled employee*
+
+```{r}
+radiotv %>% 
+  group_by(personal_status) %>% 
+  count() %>% 
+  arrange(-n)
+  
+```
+Jumlah pekerja dengan status *single male* ada sebanyak 146 orang
+
+Kita akan melihat hubungan antara jenis pekerjaan dengan personal status
+
+```{r}
+table(radiotv$job, radiotv$personal_status)
+```
+Bisa dilihat bahwa jenis pekerjaan *skill employee* dengan status *single male* yang paling banyak yaitu 103 orang
+
+## Visualisasi Data
+
+```{r}
+# Visualisasi yang mengajukan credit dengan tujuan radio/tv dilihat dari umur dan jenis pekerjaan
+radiotv %>% 
+  ggplot(aes(x=job, y=age, col=personal_status, fill=personal_status)) +
+  geom_jitter() + 
+  geom_boxplot() +
+  labs( 
+    title = "Jenis Pekerjaan dan Umur", 
+    subtitle = "Credit Purpose Radio/tv", 
+    caption = "by: Roni Yunis", 
+    x = "Pekerjaan", 
+    y = "Umur" 
+  ) + 
+  theme_minimal()
+ 
+```
+
+# Menentukan teknik pemodelan atau algoritma
+Melihat karakteristik dari dataset yang ada, maka bisa dikembangkan model klasifikasi dengan tujuan untuk mendukung dalam menentukan lama pinjaman dan tujuan pinjaman yang terbaik.
+
+**Klasifikasi** adalah salah satu tugas dalam machine learning yang memiliki tujuan untuk memisahkan atau mengelompokkan data ke dalam kategori atau kelas tertentu berdasarkan atribut-atribut yang diberikan. Dalam konteks klasifikasi, data yang dianalisis biasanya memiliki label kelas atau kategori yang sudah diketahui, dan tujuan utama adalah membangun model yang dapat memprediksi kelas atau kategori ini untuk data yang belum diketahui.
+
+Secara umum, klasifikasi melibatkan langkah-langkah berikut:
+
+1. **Pengumpulan Data**: Data dikumpulkan dan disiapkan untuk analisis. Setiap sampel data harus memiliki atribut yang relevan dan label kelas yang sesuai.
+
+2. **Pemilihan Fitur**: Atribut atau fitur yang paling relevan untuk melakukan klasifikasi harus dipilih. Pemilihan fitur yang baik dapat meningkatkan kinerja model.
+
+3. **Pembagian Data**: Dataset dibagi menjadi dua bagian: data pelatihan (training data) dan data pengujian (testing data). Data pelatihan digunakan untuk melatih model, sedangkan data pengujian digunakan untuk menguji kinerja model.
+
+4. **Pembuatan Model**: Model klasifikasi dibangun dengan menggunakan algoritma machine learning yang sesuai. Beberapa contoh algoritma klasifikasi yang umum digunakan termasuk Decision Trees, Support Vector Machines (SVM), Random Forests, k-Nearest Neighbors (k-NN), dan Logistic Regression, dll
+
+5. **Pelatihan Model**: Model klasifikasi diberikan data pelatihan untuk belajar pola yang ada dalam data. Tujuan adalah agar model dapat memahami bagaimana atribut-atribut tertentu berkaitan dengan label kelas yang sesuai.
+
+6. **Evaluasi Model**: Model yang telah dilatih dievaluasi menggunakan data pengujian yang belum pernah dilihat sebelumnya. Metrik-metrik seperti akurasi, presisi, recall, F1-score, atau area di bawah kurva Receiver Operating Characteristic (ROC-AUC) digunakan untuk mengukur kinerja model.
+
+7. **Tuning Model (Opsional)**: Model dapat disesuaikan atau disempurnakan dengan mengatur parameter-parameter atau fitur-fiturnya. Ini disebut tuning model.
+
+8. **Penggunaan Model**: Setelah model klasifikasi terbukti akurat, itu dapat digunakan untuk memprediksi kategori atau kelas label untuk data yang belum dikenal.
+
+Klasifikasi memiliki banyak aplikasi dalam berbagai bidang, seperti pengenalan pola, deteksi spam email, diagnosis medis, pengenalan wajah, analisis sentimen, dan banyak lagi. Kemampuan untuk mengelompokkan data ke dalam kelas atau kategori tertentu adalah salah satu kekuatan utama machine learning dan memungkinkan aplikasi yang sangat beragam.
+
+## Membagi Dataset
+```{r}
+set.seed(100) #pengambilan data secara random
+#untuk data training diambil 70%, sisanya untuk data testing, berdasarkan variabel foreign_worker
+index_train <- createDataPartition(credit$foreign_worker,
+                                   p = 0.7,list = FALSE)
+
+data.train <- credit[index_train,]
+data.test <- credit[-index_train,]
+```
+
+```{r}
+dim(data.train)
+dim(data.test)
+```
+
+Setelah kita bagi, maka bisa dijelaskan bahwa untuk data training ada 701 baris data dan untuk data testing ada 299 baris data yang kita gunakan utk mendukung klasifikasikan yang akan dilakukan.
+
+## Model Klasifikasi dengan Decision Tree
+### Memodelkan klasifikasi
+```{r}
+modelTree <- rpart(data=data.train,
+               foreign_worker~.,
+               control = rpart.control(cp=0, minsplit=15))
+```
+opsi minsplit = 15 memgandung pengertian bahwa jika ada node yang berukuran kurang dari 15, maka algoritma dihentikan
+
+
+```{r}
+modelTree
+```
+### Visualisasi Model Klasifikasi
+```{r}
+# Menampikan pohon klasifikasi
+rpart.plot(modelTree, extra=4,box.palette="RdBu", shadow.col="gray", nn=TRUE)
+
+```
+Dari gambarkan visualisasi diatas bisa dijelaskan bahwa keputusan terbaik untuk foreign_worker yang mengajukan credit adalah dengan durasi lama pinjaman < 11 bulan, dgn tujuan pinjaman utk membeli mobil baru dengan peluang sebasar 0,87. 
+
+### Mengukur Kinerja Prediksi
+```{r}
+prediksiTree <- predict(modelTree, data.test)
+head(prediksiTree, n=10)
+```
+
+```{r}
+prediksi.status.t <- ifelse(prediksiTree[,2] > 0.5, "yes", "no")
+#menghitung ukuran kinerja prediksi
+confusionMatrix(as.factor(prediksi.status.t), as.factor(data.test$foreign_worker))
+```
+Berdasarkan hasil diatas bisa lihat bahwa nilai akurasi sebesar 95,6%
+
+### Hitung Nilai Performance dari Prediksi
+Kurva ini digunakan untuk menilai hasil prediksi
+```{r}
+ngitungROCt <- rocit(score=prediksiTree[,2],class=data.test$foreign_worker)
+plot(ngitungROCt)
+```
+Setelah didapatkan nilai curva, maka langkah selanjutnya adalah menghitung Area Under Curve (AUC) yang nantinya dijadikan sebagai dasarkan untuk menentukan ketepatan prediksi klasifikasi yang sudah lakukan. Nilai AUC bisa dikelompokkan atas:
+a. 0.90 - 1.00 = Exellence Classification
+b. 0.80 - 0.90 = Good Classification
+c. 0.70 - 0.80 = Fair Classification
+d. 0.60 - 0.70 = Poor Classification
+e. 0.50 - 0.60 = Failur
+
+Dalam banyak kasus, nilai AUC ini juga digunakan untuk mengukur perbedaan performansi metode klasifikasi.
+
+```{r}
+# Menghitung Area Under Curve (AUC)
+AUCtree <- ngitungROCt$AUC
+AUCtree
+```
+Nilai AUC nya adalah 73,1%, artinya klasifikasi yang dihasilkan termasuk pada **fair classification**
+
+
+## Model Klasifikasi dengan Random Forest
+### Memodelkan klasifikasi
+```{r}
+set.seed(123) #menentukan nilai acak dari data
+modelForest <- randomForest(data=data.train,
+               as.factor(foreign_worker)~.,
+               ntree=100, mtry=3)
+
+```
+
+```{r}
+modelForest
+```
+Tingkat kesalahan sebesar 3,71% atau dengan akurasi sebesar 96,29%
+
+### Mengukur kinerja prediksi
+```{r}
+hasilPrediksi <- predict(modelForest, data.test, type="prob")
+head(hasilPrediksi, n=10)
+```
+
+### Menampilkan plot hasil prediksi
+```{r} 
+plot(hasilPrediksi )
+```
+```{r}
+prediksi.status.f <- ifelse(hasilPrediksi[,2] > 0.5, "yes", "no")
+
+#menghitung ukuran kinerja prediksi
+confusionMatrix(as.factor(prediksi.status.f), as.factor(data.test$foreign_worker))
+```
+Berdasarkan hasil diatas bisa lihat bahwa nilai akurasi sebesar 96,3 %
+
+### Hitung Nilai Performance dari Prediksi
+
+```{r}
+ngitungROCf <- rocit(score=hasilPrediksi[,2],class=data.test$foreign_worker)
+plot(ngitungROCf)
+```
+```{r}
+AUCf <- ngitungROCf$AUC
+AUCf
+```
+Nilai AUC nya adalah 76,5%, artinya klasifikasi yang dihasilkan termasuk pada **fair classification**
+
+Kalau kita bandingkan dari kedua model tersebut, kinerja dari klasifikasi dengan *Random Forest* **lebih baik sedikit** dibandingkan dengan *Decision Tree*
+
+
+
