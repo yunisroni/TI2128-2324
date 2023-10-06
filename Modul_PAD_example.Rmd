@@ -11,13 +11,21 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # Pengantar
 Dalam pembahasan kali ini, kita akan membahas secara umum proses analitikal data. Tujuan dari analitika data adalah untuk mendapatkan informasi dari data sehingga dapat membuat keputusan binis yang tepat. Dalam proses analitikal data ada beberapa tahapan yang harus dilalui yaitu:
+
 1. Memahami masalah bisnis
+
 2. Mengumpulkan data dan mengintegrasikan data
+
 3. Pra Proses data
+
 4. Ekplorasi dan visualisasi data
-5. Menentukan teknik pemodelan atau algaritma
+
+5. Menentukan teknik pemodelan atau algoritma yang tepat
+
 6. Evaluasi model
+
 7. Laporkan hasilnya kepada pihak manajemen
+
 8. Kembangkan model
 
 Dari 8 tahapan tersebut, tahapan yang sangat penting dan berpengaruh pada hasil pengembangan model keputusan adalah tahap **Exploratory Data Analysis (EDA)**. EDA adalah proses ekplorasi data yang bertujuan untuk memahami isi dan komponen penyusun data. Biasanya EDA dilakukan dengan beberapa cara; *analisis deskriptif dengan satu variabel*, *analisis relasi dengan dua variabel*, dan *analisis dengan menggunakan lebih dari atau sama dengan tiga variabel.* 
@@ -32,7 +40,7 @@ Untuk mendukung klasifikasi yang akan dilakukan, maka ada beberapa packages/libr
 library(dplyr)
 # Package untuk visualisasi data
 library (ggplot2)
-# package untuk praktisi data
+# package untuk praktisi/membagi data
 library(caret)
 # package untuk klasifikasi
 library(randomForest)
