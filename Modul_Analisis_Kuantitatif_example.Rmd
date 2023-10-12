@@ -27,10 +27,7 @@ library(cluster)
 library(scales)
 library(factoextra)
 library(mclust)
-#library(vars)
-#library(forecast)
-#library(caret)
-#library(timetk)
+
 ```
 
 # 3. Analisis Klustering Produksi Padi
