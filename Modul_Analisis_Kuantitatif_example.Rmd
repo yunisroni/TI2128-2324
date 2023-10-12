@@ -36,8 +36,13 @@ library(mclust)
 
 ```{r}
 padi_sumut <- read_excel("data/bps_padi_sumut.xlsx")
-padi_sumut
+head(padi_sumut)
 ```
+```{r}
+glimpse(padi_sumut)
+```
+
+
 
 ## Scrub Data
 
@@ -52,6 +57,11 @@ padi_sumut$Produksi <- as.numeric(padi_sumut$Produksi)
 padi_sumut$`Luas Panen` <- as.numeric(padi_sumut$`Luas Panen`)
 padi_sumut
 ```
+```{r}
+glimpse(padi_sumut)
+```
+
+
 
 ```{r}
 # Merubah type Tahun menjadi Date
@@ -289,14 +299,26 @@ datapadi2017 <- padisumutfilter %>%
 ```
 
 ```{r}
+head(datapadi2017)
+```
+
+
+
+```{r}
 # Memilih variabel klastering
 clustering_data <- datapadi2017 %>% 
  dplyr::select(Produksi, Rata_rata_produksi, Luas_panen)
 ```
 
 ```{r}
+head(clustering_data)
+```
+
+
+```{r}
 # Tentukan skala dari variabel
 scale_data <- as.data.frame(scale(clustering_data))
+scale_data
 ```
 
 ```{r}
@@ -326,11 +348,13 @@ cat("Optimal number of clusters:", optimal_k)
 set.seed(123)
 k <- 10 # jumlah klaster
 kmeans_result <- kmeans(scale_data, centers = k)
+kmeans_result
 ```
 
 ```{r}
 # tambahkan label ke dalam data frame
 datapadi2017$Cluster <- as.factor(kmeans_result$cluster)
+datapadi2017
 ```
 
 ```{r}
@@ -435,6 +459,11 @@ inertia_df
 ```
 
 Berdasarkan hasil evaluasi dengan Inertia, didapatkan bahwa jumlah klaster yang tepat untuk pengujian klaster yang dilakukan adalah 10, karena nilai Inertia yang paling rendah
+
+```{r}
+kmeans_result
+```
+
 
 ```{r}
 akurasi_klastering <- (kmeans_result$betweenss/kmeans_result$totss)*100
