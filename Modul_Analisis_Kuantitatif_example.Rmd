@@ -11,11 +11,10 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # 1. Deskripsi
 
-Tujuan analisis adalah menghasilkan model prediksi tanaman pangan melalui analisis big data. Temuan dari penelitian ini akan menjadi landasan penting dalam pembangunan sistem big data nasional yang
-difokuskan pada bidang pertanian, sehingga dapat mendukung program pemerintah dalam pengambilan keputusan untuk meningkatkan ketahanan pangan nasional. Untuk pengujian dan analisis akan menggunakan dataset tanaman pangan yang ada di wilayah Sumatera Utara. Data tanaman pangan yang akan di analisis adalah data padi dari 2010-2022
+Tujuan analisis adalah menghasilkan model prediksi tanaman pangan melalui analisis big data. Temuan dari analisis ini akan menjadi landasan penting dalam pengambilan keputusan untuk meningkatkan ketahanan pangan khususnya di wilayan Sumatera Utara. Untuk pengujian dan analisis akan menggunakan data tanaman pangan padi dari 2010-2022
 
 # 2. Load Library
-
+ 
 ```{r}
 library(dplyr)
 library(ggplot2)
@@ -26,10 +25,10 @@ library(cluster)
 library(scales)
 library(factoextra)
 library(mclust)
-library(vars)
-library(forecast)
-library(caret)
-library(timetk)
+#library(vars)
+#library(forecast)
+#library(caret)
+#library(timetk)
 ```
 
 # 3. Data Padi
@@ -265,7 +264,7 @@ periodogram_plot <- spectrum(padisumutfilter$Produksi, main = "Periodogram of Pr
 periodogram_plot
 ```
 
-Berdasarkan Periodogram Produksi Padi bisa dilihat bahwa ada fluktuasi yang tidak berulang dalam data sehingga bisa disimpulkan tidak adanya pola musiman. Melihat hal ini maka akan dilakukan analisis prediksi yang lebih lanjut dan komplek.
+Berdasarkan Periodogram Produksi Padi bisa dilihat bahwa ada fluktuasi yang berulang dalam data sehingga bisa disimpulkan adanya pola musiman. Melihat hal ini maka akan dilakukan analisis prediksi yang lebih lanjut dan komplek.
 
 ## Model
 
@@ -276,8 +275,8 @@ Tujuan klastering adalah mengelompokkan wilayah produksi padi berdasarkan kabupa
 # Filter data produksi terbanyak berdasarkan tahun
 grouped_data <- padisumutfilter %>%
   group_by(Tahun) %>%
-  arrange(desc(Produksi)) %>%
-  summarise(Total_Produksi = sum(Produksi))
+  summarise(Total_Produksi = sum(Produksi)) %>% 
+  arrange(desc(Total_Produksi))
 grouped_data
             
 ```
@@ -415,7 +414,7 @@ kabupaten_per_cluster <- datapadi2017 %>%
   summarise(Kabupaten_kota = list(unique(Kabupaten_kota)))
 
 # Menampilkan nama kabupaten/kota dari setiap klaster
-for (i in 1:8) {
+for (i in 1:10) {
   cat(paste("Klaster", i, ":", kabupaten_per_cluster$Kabupaten_kota[[i]], "\n"))
 }
 ```
