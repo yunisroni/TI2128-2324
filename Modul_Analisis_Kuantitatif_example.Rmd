@@ -2,7 +2,9 @@
 title: "Modul_Analisis_Kuantitatif"
 author: "Roni Yunis"
 date: "2023-10-12"
-output: html_document
+output:
+  pdf_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -11,7 +13,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # 1. Deskripsi
 
-Tujuan analisis adalah menghasilkan model prediksi tanaman pangan melalui analisis big data. Temuan dari analisis ini akan menjadi landasan penting dalam pengambilan keputusan untuk meningkatkan ketahanan pangan khususnya di wilayan Sumatera Utara. Untuk pengujian dan analisis akan menggunakan data tanaman pangan padi dari 2010-2022
+Tujuan analisis adalah menghasilkan model prediksi tanaman pangan melalui analisis klustering. Temuan dari analisis ini akan menjadi landasan penting dalam pengambilan keputusan untuk meningkatkan ketahanan pangan khususnya di wilayan Sumatera Utara. Untuk pengujian dan analisis akan menggunakan data tanaman pangan padi dari 2010-2022.
 
 # 2. Load Library
  
@@ -31,7 +33,7 @@ library(mclust)
 #library(timetk)
 ```
 
-# 3. Data Padi
+# 3. Analisis Klustering Produksi Padi
 
 ## Obstain - Load Dataset
 
