@@ -1,0 +1,169 @@
+---
+title: "Modul_PCA"
+author: "Roni Yunis"
+date: "2023-10-18"
+output: html_document
+---
+
+# Principal Component Analysis (PCA)
+
+Principal Component Analysis (PCA) adalah teknik analisis statistik multivariat yang digunakan untuk merangkum data dalam jumlah variabel besar menjadi komponen utama yang lebih kecil. PCA umumnya digunakan dalam bidang pengenalan pola dan pemrosesan sinyal.
+
+Ada beberapa cara untuk menentukan berapa banyak komponen utama yang harus dipertahankan dalam PCA, termasuk kriteria apriori, kriteria nilai eigen, dan kriteria persentase varians.
+
+Cara kerja PCA melibatkan beberapa tahap utama, termasuk standarisasi data, perhitungan matriks kovarians, perhitungan nilai dan vektor eigen matriks kovarians, pemilihan komponen utama dengan nilai eigen yang signifikan, dan transformasi data ke dalam ruang komponen utama.
+
+PCA berguna saat Anda perlu mengurangi jumlah variabel dalam data, menguji ketergantungan antarvariabel, atau mengekstraksi hubungan antarvariabel. Namun, sebaiknya dihindari jika Anda membutuhkan interpretasi yang jelas dari variabel independen.
+
+Dalam rangka menginterpretasi data lebih cepat, PCA adalah alat yang efektif dalam analisis data multivariat.
+
+# Contoh Penerapan PCA dalam Segmentasi Pasar
+
+**Pernyataan Masalah:** Analisis Profil Pelanggan adalah analisis rinci mengenai pelanggan ideal suatu perusahaan. Ini membantu perusahaan memahami pelanggan mereka dengan lebih baik dan memudahkan mereka untuk mengubah atau menciptakan produk sesuai dengan kebutuhan, perilaku, dan perhatian khusus dari berbagai jenis pelanggan.
+
+Analisis profil pelanggan membantu perusahaan mengubah produknya berdasarkan pelanggan target dari berbagai segmen pelanggan. Sebagai contoh, daripada menghabiskan uang untuk memasarkan produk baru kepada setiap pelanggan dalam database perusahaan, perusahaan dapat menganalisis segmen pelanggan mana yang paling mungkin membeli produk tersebut, dan kemudian memasarkan produk hanya pada segmen tersebut. Dalam contoh ini, dataset yang akan digunakan adalah data marketing_campaign.csv
+
+```{r}
+# Library yang berisi kumpulan packages untuk analisis data
+library(tidyverse)
+
+```
+
+## Load Data
+```{r}
+customers <- read.csv("data/marketing_campaign.csv")
+head(customers)
+```
+
+## Ekplorasi Data Analisis
+```{r}
+glimpse(customers)
+```
+```{r}
+summary(customers)
+```
+
+```{r}
+colSums(is.na(customers))
+```
+```{r}
+# Hapus data NA's
+customers <- na.omit(customers)
+colSums(is.na(customers))
+```
+
+
+
+```{r}
+# Visualisasi Variabel dalam data
+plot_1 <- ggplot(customers, aes(x=Year_Birth, y=Income, group=Marital_Status, Color=Education)) +
+  geom_point() +
+  labs(title = "Jumlah Pendapatan", x = "Tahun Lahir", y = "Pendapatan") +
+  scale_y_continuous(labels = scales::comma) +
+  theme_minimal() +
+  theme(legend.position = "right")
+plot_1
+```
+
+```{r}
+# Merubah type data Dt_customer
+customers <- customers %>% 
+  mutate(Dt_Customer = as.Date(dmy(Dt_Customer)))
+glimpse(customers)
+```
+```{r}
+# Membuat variabel dari Year of Birth
+customers <- customers %>% 
+  mutate(Age = 2023 - Year_Birth)
+
+glimpse(customers)
+
+```
+```{r}
+customers %>% 
+  select(Age) %>% 
+  arrange(desc(Age)) %>% 
+  top_n(5)
+
+```
+Ada umur yang diatas 100, ini merupakan data outlier yang dipastikan produk yang akan dipasarkan tidak sesuai dengan umur tersebut.
+
+```{r}
+# Hapus data outlier
+customers <- customers %>% 
+  filter(Income < 600000 & Age < 90)
+dim(customers)
+```
+```{r}
+glimpse(customers)
+```
+```{r}
+head(customers$Education)
+```
+```{r}
+head(customers$Marital_Status)
+```
+```{r}
+unique(customers$Marital_Status)
+```
+Kita jadi Marital_status ini menjadi 2 kategori saja, yaitu Single dan Taken
+Single: Divorced, Widow, Alone, Absurd, Yolo
+Taken: Together, Married
+
+```{r}
+customers <- customers %>% 
+  mutate(Marital_Status = replace(Marital_Status, Marital_Status == "Divorced" | Marital_Status == "Widow" | Marital_Status == "Alone" | Marital_Status == "Absurd" | Marital_Status == "YOLO", "Single"))
+
+```
+
+```{r}
+customers <- customers %>% 
+  mutate (Marital_Status = replace(Marital_Status, Marital_Status == "Together" | Marital_Status == "Married", "Taken"))
+
+```
+
+```{r}
+glimpse(customers)
+```
+*Latihan*
+Rubahkan atau eksrak data Education menjadi 2 kategori Graduate dan Non-graduate
+
+```{r}
+unique(customers$Education)
+```
+
+graduate : Graduation, PHD, Master
+non-graduate : Basic, 2n Cycle
+
+```{r}
+#your code
+
+
+```
+
+
+```{r}
+# Merubah nama produk 
+customers <- customers %>% 
+  rename(wines = MntWines, fruits = MntFruits, meat = MntMeatProducts, fish = MntFishProducts, sweet = MntSweetProducts, gold = MntGoldProds)
+glimpse(customers)
+```
+```{r}
+# Buat variabel baru untuk Total_spent dari produk
+customers <- customers %>% 
+  mutate(Total_spent = wines + fruits + meat + fish + sweet + gold)
+glimpse(customers)
+```
+
+Membuang variabel  data yang redundant atau data yang sama muncul berulang-ulang
+```{r}
+# Menghapus variabeld dengan data berulang/redundant
+customers <- customers %>% 
+  select(- ID, - Year_Birth, - Dt_Customer, - Z_CostContact, - Z_Revenue)
+glimpse(customers)
+
+```
+```{r}
+head(customers)
+```
+
