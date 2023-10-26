@@ -407,3 +407,11 @@ customers %>% ggplot(aes(meat)) + geom_histogram(color = "black", fill = "brown"
 
 *Latihan*
 Lakukan penentuan untuk semua variabel atau 26 variabel ke dalam PCA, tentukan 8 veriabel yg penting dan kemudian lakukan kembali klustering.
+
+```{r}
+# your code
+
+
+
+```
+
