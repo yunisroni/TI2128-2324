@@ -2,7 +2,9 @@
 title: "Modul_PCA"
 author: "Roni Yunis"
 date: "2023-10-18"
-output: html_document
+output:
+  pdf_document: default
+  html_document: default
 ---
 
 # Principal Component Analysis (PCA)
