@@ -1,0 +1,285 @@
+---
+title: "Model_Esemble"
+author: "Roni Yunis"
+date: "2023-11-01"
+output: html_document
+---
+
+```{r}
+library(tidyverse)
+library(randomForest)
+library(caret)
+library(e1071)
+library(Metrics)
+library(readxl)
+```
+
+# Konsep Model Ensemble
+
+**Model Ensemble** adalah teknik yang digunakan dalam analitika data untuk menggabungkan hasil dari beberapa model prediksi atau algoritma berbeda menjadi satu model yang lebih optimal. **Tujuan** umum dari model ensemble adalah meningkatkan akurasi prediksi dan mengurangi risiko overfitting yang mungkin terjadi jika hanya menggunakan satu model tunggal, serta meningkatkan stabilitas dari model sehingga hasil prediksi lebih konsisten dan dapat dihandalkan.
+
+**Manfaat** model ensemble diantaranya adalah:
+
+1. _Meningkatkan Prediksi_: Dengan menggabungkan kekuatan berbagai model, Ensemble dapat memberikan prediksi yang lebih akurat dan dapat diandalkan.
+
+2. _Pengambilan Keputusan yang Lebih Baik_: Dengan hasil yang lebih akurat, bisnis dapat membuat keputusan yang lebih baik dalam hal perencanaan strategi, manajemen risiko, dan alokasi sumber daya.
+
+3. _Fleksibilitas_: Model Ensemble dapat digunakan dalam berbagai jenis masalah bisnis, seperti klasifikasi, regresi, atau segmentasi pelanggan, sehingga memberikan fleksibilitas dalam menerapkan analitika data untuk berbagai keperluan.
+
+4. _Mengatasi Heterogenitas Data_: Dalam beberapa kasus, data mungkin sangat heterogen atau tidak sesuai dengan model tunggal tertentu. Ensemble dapat membantu mengatasi tantangan ini dengan menggabungkan model yang berbeda untuk berbagai bagian data.
+
+# Contoh Model Ensemble
+
+Berikut ini kita akan menggunakan model ensemble untuk prediksi produksi padi, dengan menggabungkan 2 model tunggal untuk mendapatkan tingkat akurasi yang lebih baik.
+
+
+# Obstain Data
+
+```{r}
+padi_sumut <- read_excel("data/bps_padi_sumut.xlsx")
+head(padi_sumut)
+```
+```{r}
+#Melihat struktur data
+glimpse(padi_sumut)
+```
+# Scrub Data
+
+## a. Merubah type data
+
+```{r}
+# Merubah type data karakter menjadi numeric
+padi_sumut$`Rata-rata produksi` <- as.numeric(padi_sumut$`Rata-rata produksi`)
+padi_sumut$Produksi <- as.numeric(padi_sumut$Produksi)
+padi_sumut$`Luas Panen` <- as.numeric(padi_sumut$`Luas Panen`)
+padi_sumut
+```
+```{r}
+# Merubah type Tahun menjadi Date
+padi_sumut$Tahun <- make_date(padi_sumut$Tahun)
+glimpse(padi_sumut)
+```
+```{r}
+# Merubah nama variabel Kabupaten Kota, Rata-rata Produksi dan Luas Panen
+names(padi_sumut)[names(padi_sumut) == "Kabupaten Kota"] <- "Kabupaten_kota"
+names(padi_sumut)[names(padi_sumut) == "Rata-rata produksi"] <- "Rata_rata_produksi"
+names(padi_sumut)[names(padi_sumut) == "Luas Panen"] <- "Luas_panen"
+glimpse(padi_sumut)
+```
+## b. Menghapus Data Kosong
+
+```{r}
+# Menampikan variabel dengan baris kosong
+colSums(is.na(padi_sumut))
+```
+
+```{r}
+# Menghapus data NA's
+padisumut_clean <- na.omit(padi_sumut)
+summary(padisumut_clean)
+```
+
+```{r}
+padisumutfilter <- padisumut_clean[padisumut_clean$Kabupaten_kota != "Sumatera Utara",]
+padisumutfilter
+```
+
+#Ekplorasi Data Analysis
+
+```{r}
+plot_1 <- ggplot(padisumutfilter, aes(x = Tahun, y = Produksi, group = Kabupaten_kota, color = Kabupaten_kota)) +
+  geom_line() +
+  labs(title = "Jumlah Produksi Padi", x = "Tahun", y = "Produksi Padi (Ha)") +
+  scale_y_continuous(labels = scales::comma) +
+  theme_minimal() +
+  theme(legend.position = "right")
+plot_1
+
+```
+# Model
+
+Tujuan adalah mengembangkan model prediksi untuk memperkiraan jumlah produksi padi. 
+```{r}
+# Menyiapkan data pelatihan dan data pengujian
+set.seed(123)  # Untuk hasil yang dapat direproduksi
+splitIndex <- createDataPartition(padisumutfilter$Produksi, p = 0.7, list = FALSE)
+data_train <- padisumutfilter[splitIndex, ]  # Data pelatihan (70%)
+data_test <- padisumutfilter[-splitIndex, ]  # Data pengujian (30%)
+dim(data_train)
+dim(data_test)
+```
+
+## Model Random Forest
+
+```{r}
+# Membuat model RF
+rf_model <- randomForest(Produksi ~ Luas_panen + Rata_rata_produksi, data = data_train, ntree = 100)
+```
+
+```{r}
+# Melakukan Prediksi terhadap Data Pengujian
+predictions_rf <- predict(rf_model, data_test)
+```
+
+```{r}
+# Visualisasi Sales Aktual dengan Hasil Prediksi
+result_data_rf <- data.frame(Produksi = data_test$Produksi, Predictions = predictions_rf)
+
+# Visualisasi Perbandingan Produksi Aktual dengan Hasil Prediksi
+ggplot(data = result_data_rf, aes(x = Produksi, y = Predictions)) +
+  geom_point() +
+  geom_abline(intercept = 0, slope = 1, color = "red", linetype = "dashed") +
+  scale_x_continuous(labels = scales::comma) +
+  scale_y_continuous(labels = scales::comma) +
+  labs(x = "Produksi Aktual (Ton)", y = "Prediksi Produksi (Ton)") +
+  ggtitle("Perbandingan Produksi Aktual dan Prediksi Model RF") +
+  theme_minimal()
+
+# Visualisasi dengan Plot Line
+ggplot(data = result_data_rf, aes(x = 1:length(Produksi))) +
+  geom_line(aes(y = Produksi, color = "Aktual"), size = 1) +
+  geom_line(aes(y = Predictions, color = "Prediksi"), size = 1) +
+  labs(x = "Observasi", y = "Produksi (Ton)") +
+  scale_color_manual(values = c("Aktual" = "blue", "Prediksi" = "red")) +
+  ggtitle("Perbandingan Produksi Aktual dan Prediksi Model RF") +
+  scale_y_continuous(labels = scales::comma) +
+  theme_minimal()
+```
+```{r}
+# Evaluasi RF Model
+
+# Hitung MAE
+mae_value_rf <- mae(data_test$Produksi, predictions_rf)
+
+# Hitung MSE
+mse_value_rf <- mse(data_test$Produksi, predictions_rf)
+
+# Hitung MAPE
+mape_value_rf <- mape(data_test$Produksi, predictions_rf)
+
+# Tampilkan hasil evaluasi
+cat(paste("MAE: ", mae_value_rf, "\n"))
+cat(paste("MSE: ", mse_value_rf, "\n"))
+cat(paste("MAPE: ", mape_value_rf, "%\n"))
+```
+## Model SVR
+
+```{r}
+# Membuat model SVR
+svr_model <- svm(Produksi ~ Luas_panen + Rata_rata_produksi, data = data_train, kernel = "radial", cost = 1)
+```
+
+```{r}
+# Melakukan prediksi dengan Data Testing
+predictions_svr <- predict(svr_model, data_test)
+```
+
+```{r}
+# Visualisasi hasil prediksi
+result_data_svr <- data.frame(Produksi = data_test$Produksi, Predictions = predictions_svr)
+
+# Visualisasi Perbandingan Produksi Aktual dengan Hasil Prediksi
+ggplot(data = result_data_svr, aes(x = Produksi, y = Predictions)) +
+  geom_point() +
+  geom_abline(intercept = 0, slope = 1, color = "red", linetype = "dashed") +
+  labs(x = "Produksi Aktual (Ton)", y = "Prediksi Produksi (Ton)") +
+  scale_x_continuous(labels = scales::comma) +
+  scale_y_continuous(labels = scales::comma) +
+  ggtitle("Perbandingan Produksi Aktual dan Prediksi Model SVR") +
+  theme_minimal()
+
+# Buat grafik garis dengan ggplot2
+ggplot(data = result_data_svr, aes(x = 1:length(Produksi))) +
+  geom_line(aes(y = Produksi, color = "Aktual"), size = 1) +
+  geom_line(aes(y = Predictions, color = "Prediksi"), size = 1) +
+  labs(x = "Observasi", y = "Produksi (Ton)") +
+  scale_color_manual(values = c("Aktual" = "blue", "Prediksi" = "red")) +
+  ggtitle("Perbandingan Produksi Aktual dan Prediksi Model SVR") +
+  scale_y_continuous(labels = scales::comma) +
+  theme_minimal()
+```
+
+```{r}
+# Evaluasi SVR Model
+
+# Hitung MAE
+mae_value_svr <- mae(data_test$Produksi, predictions_svr)
+
+# Hitung MSE
+mse_value_svr <- mse(data_test$Produksi, predictions_svr)
+
+# Hitung MAPE
+mape_value_svr <- mape(data_test$Produksi, predictions_svr)
+
+# Tampilkan hasil evaluasi
+cat(paste("MAE: ", mae_value_svr, "\n"))
+cat(paste("MSE: ", mse_value_svr, "\n"))
+cat(paste("MAPE: ", mape_value_svr, "%\n"))
+```
+## Hybrid/Ensemble Model SVR dan RF
+
+```{r}
+#Hybrid Model SVR dan rf
+predictions_hybrid_svr_rf <- (predictions_svr + predictions_rf) / 2
+```
+
+```{r}
+# Hitung MAE
+mae_value_hybrid_svr_rf <- mae(data_test$Produksi, predictions_hybrid_svr_rf)
+
+# Hitung MSE
+mse_value_hybrid_svr_rf <- mse(data_test$Produksi, predictions_hybrid_svr_rf)
+
+# Hitung MAPE
+mape_value_hybrid_svr_rf <- mape(data_test$Produksi, predictions_hybrid_svr_rf)
+
+# Tampilkan hasil evaluasi
+cat(paste("MAE: ", mae_value_hybrid_svr_rf, "\n"))
+cat(paste("MSE: ", mse_value_hybrid_svr_rf, "\n"))
+cat(paste("MAPE: ", mape_value_hybrid_svr_rf, "%\n"))
+```
+
+```{r}
+# Visualisasi hasil prediksi dan nilai aktual
+result_data <- data.frame(
+  Produksi = data_test$Produksi,
+  Pred_Hybrid = predictions_hybrid_svr_rf
+)
+
+# Visualisasi Perbandingan Produksi Aktual dengan Hasil Prediksi
+ggplot(data = result_data, aes(x = Produksi, y = Pred_Hybrid)) +
+  geom_point() +
+  geom_abline(intercept = 0, slope = 1, color = "red", linetype = "dashed") +
+  labs(x = "Produksi Aktual (Ton)", y = "Prediksi Produksi (Ton)") +
+  scale_x_continuous(labels = scales::comma) +
+  scale_y_continuous(labels = scales::comma) +
+  ggtitle("Perbandingan Produksi Aktual dan Prediksi Model Esemble") +
+  theme_minimal()
+
+# Buat grafik garis dengan ggplot2
+ggplot(data = result_data, aes(x = 1:length(Produksi))) +
+  geom_line(aes(y = Produksi, color = "Aktual"), size = 1) +
+  geom_line(aes(y = Pred_Hybrid, color = "Prediksi"), size = 1) +
+  labs(x = "Observasi", y = "Produksi (Ton)") +
+  scale_color_manual(values = c("Aktual" = "blue", "Prediksi" = "red")) +
+  ggtitle("Perbandingan Produksi Aktual dan Prediksi Model Esemble") +
+  scale_y_continuous(labels = scales::comma) +
+  theme_minimal()
+```
+
+# iNterpret
+
+```{r}
+model_performance <- data.frame(
+  No = c(1:3),
+  Model = c("Random Forest", "SVR", "Esemble RF & SVR"),
+  MSE = c(mse_value_rf, mse_value_svr, mse_value_hybrid_svr_rf),
+  MAE = c(mae_value_rf, mae_value_svr, mae_value_hybrid_svr_rf),
+  MAPE = c(mape_value_rf, mape_value_svr, mape_value_hybrid_svr_rf),
+  stringsAsFactors = FALSE
+  
+)
+model_performance
+```
+
+Berdasarkan hasil diatas bisa disimpulkan bahwa, performansi dari model ensemble lebih baik dari pada model SVR dan RF dalam melakukan prediksi, dimana nilai MAE dari model ensemble adalah sebesar 9747.467 dan nilai MSE sebesar 820065064. Nilai MAE dan MSE dari model ensemble lebih kecil dari 2 model yang lain. Penggabungan model tersebut dapat meningkatkan performansi atau akurasi dalam melakukan prediksi.
