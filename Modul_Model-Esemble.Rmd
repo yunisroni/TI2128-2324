@@ -2,16 +2,26 @@
 title: "Model_Ensemble"
 author: "Roni Yunis"
 date: "2023-11-01"
-output: html_document
+output:
+  pdf_document: default
+  html_document: default
 ---
+
+Load Library
 
 ```{r}
 library(tidyverse)
+# library menggabung beberapa library yang digunakan untuk manipulasi data (dplyr, lubridate, ggplot2)
 library(randomForest)
+# library machine learning random forest
 library(caret)
+# library untuk membagi partisi data (data training dan data testing)
 library(e1071)
+# library machine learning SVR (Support Vector Regression) variance dari SVM (Support Vector Machine)
 library(Metrics)
+# library untuk mengukur performansi atau akurasi dari model
 library(readxl)
+# library untuk mengimport dataset dengan format excel.
 ```
 
 # Konsep Model Ensemble
@@ -30,7 +40,8 @@ library(readxl)
 
 # Contoh Model Ensemble
 
-Berikut ini kita akan menggunakan model ensemble untuk prediksi produksi padi, dengan menggabungkan 2 model tunggal untuk mendapatkan tingkat akurasi yang lebih baik.
+Berikut ini kita akan menggunakan model ensemble untuk prediksi produksi padi, dengan menggabungkan 2 model tunggal untuk mendapatkan tingkat akurasi yang lebih baik. Framework analitikal data menggunakan OSEMN. 
+O = Obstain, S = Scrub, E = Exploration Data Analytics, M = Model, N = iNterpret
 
 
 # Obstain Data
@@ -52,7 +63,7 @@ glimpse(padi_sumut)
 padi_sumut$`Rata-rata produksi` <- as.numeric(padi_sumut$`Rata-rata produksi`)
 padi_sumut$Produksi <- as.numeric(padi_sumut$Produksi)
 padi_sumut$`Luas Panen` <- as.numeric(padi_sumut$`Luas Panen`)
-padi_sumut
+glimpse(padi_sumut)
 ```
 ```{r}
 # Merubah type Tahun menjadi Date
@@ -77,28 +88,42 @@ colSums(is.na(padi_sumut))
 # Menghapus data NA's
 padisumut_clean <- na.omit(padi_sumut)
 summary(padisumut_clean)
+colSums(is.na(padisumut_clean))
+glimpse(padisumut_clean)
 ```
 
 ```{r}
 padisumutfilter <- padisumut_clean[padisumut_clean$Kabupaten_kota != "Sumatera Utara",]
 padisumutfilter
+glimpse(padisumutfilter)
 ```
 
-#Ekplorasi Data Analysis
+# Ekplorasi Data Analysis
 
 ```{r}
 plot_1 <- ggplot(padisumutfilter, aes(x = Tahun, y = Produksi, group = Kabupaten_kota, color = Kabupaten_kota)) +
   geom_line() +
-  labs(title = "Jumlah Produksi Padi", x = "Tahun", y = "Produksi Padi (Ha)") +
+  labs(title = "Jumlah Produksi Padi", x = "Tahun", y = "Produksi Padi (Ton)") +
   scale_y_continuous(labels = scales::comma) +
   theme_minimal() +
   theme(legend.position = "right")
 plot_1
 
 ```
+*Latihan*
+Lakukan ekplorasi data untuk variabel yang lain
+
+```{r}
+# your code
+
+
+
+```
+
 # Model
 
 Tujuan adalah mengembangkan model prediksi untuk memperkiraan jumlah produksi padi. 
+
 ```{r}
 # Menyiapkan data pelatihan dan data pengujian
 set.seed(123)  # Untuk hasil yang dapat direproduksi
@@ -122,7 +147,7 @@ predictions_rf <- predict(rf_model, data_test)
 ```
 
 ```{r}
-# Visualisasi Sales Aktual dengan Hasil Prediksi
+# Visualisasi produksi Aktual dengan Hasil Prediksi
 result_data_rf <- data.frame(Produksi = data_test$Produksi, Predictions = predictions_rf)
 
 # Visualisasi Perbandingan Produksi Aktual dengan Hasil Prediksi
@@ -148,13 +173,13 @@ ggplot(data = result_data_rf, aes(x = 1:length(Produksi))) +
 ```{r}
 # Evaluasi RF Model
 
-# Hitung MAE
+# Hitung MAE (Mean Absolute Error)
 mae_value_rf <- mae(data_test$Produksi, predictions_rf)
 
-# Hitung MSE
+# Hitung MSE (Mean Square Error)
 mse_value_rf <- mse(data_test$Produksi, predictions_rf)
 
-# Hitung MAPE
+# Hitung MAPE (Mean Absolute Percent Error)
 mape_value_rf <- mape(data_test$Produksi, predictions_rf)
 
 # Tampilkan hasil evaluasi
@@ -217,6 +242,9 @@ cat(paste("MSE: ", mse_value_svr, "\n"))
 cat(paste("MAPE: ", mape_value_svr, "%\n"))
 ```
 ## Hybrid/Ensemble Model SVR dan RF
+Ensemble model bisa dilakukan dengan membuat pembobotan terdapat nilai prediksi dari model. Kalau hybrid 2 model RF dan SVR
+Model_hybrid = %bobot*model RF + %bobot*model SVR. Kita tetapkan bobot nya, nilai 50%
+Model_hybrid = 50%*prediction_svr + 50%*predictions_rf = (predictions_svr + predictions_rf) / 2
 
 ```{r}
 #Hybrid Model SVR dan rf
