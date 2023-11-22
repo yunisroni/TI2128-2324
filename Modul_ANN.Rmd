@@ -1,0 +1,51 @@
+---
+title: "Modul_ANN"
+author: "Roni Yunis"
+date: "2023-11-22"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+# Introduction to Neural Networks
+
+Neural network atau jaringan saraf tiruan adalah bagian dari pembelajaran mesin yang terinspirasi oleh otak manusia. Jaringan ini meniru cara neuron biologis berkomunikasi satu sama lain untuk menghasilkan sebuah keputusan. 
+
+Jaringan saraf terdiri dari lapisan input, lapisan tersembunyi, dan lapisan output. Lapisan pertama menerima input mentah, diproses oleh beberapa lapisan tersembunyi, dan lapisan terakhir menghasilkan hasilnya. 
+
+
+```{r fig.width=2, echo=FALSE}
+knitr::include_graphics(path = "image/ANN.jpg")
+```
+
+Algoritme deep learning atau deep naural network terdiri dari beberapa lapisan tersembunyi dan node. "Deep" berarti kedalaman jaringan saraf. Algoritma ini umumnya digunakan untuk memecahkan masalah yang kompleks seperti klasifikasi gambar, pengenalan suara, dan pembuatan teks.
+
+# Jenis-jenis Jaringan Syaraf Tiruan
+
+Beberapa jenis jaringan saraf digunakan untuk aplikasi pembelajaran mesin tingkat lanjut. Tidak ada satu model arsitektur yang cocok untuk semua. Jenis jaringan saraf tertua dikenal sebagai Perceptron, yang dibuat oleh Frank Rosenblatt pada tahun 1958. 
+
+Pada bagian ini, kita akan membahas 5 jenis jaringan saraf yang paling populer yang digunakan dalam industri teknologi. 
+
+**Jaringan Syaraf Tiruan Feedforward**
+
+Jaringan saraf feedforward terdiri dari lapisan input, lapisan tersembunyi, dan lapisan output. Disebut feedforward karena data mengalir ke arah depan, dan tidak ada backpropagation. Jaringan ini banyak digunakan dalam Klasifikasi, Pengenalan suara, Pengenalan wajah, dan Pengenalan pola.
+
+**Perceptron Multi-Lapisan**
+
+Multi-Layer Perceptron (MLP) mengatasi kekurangan jaringan saraf feedforward yang tidak dapat belajar melalui backpropagation. Jaringan ini bersifat dua arah dan terdiri dari beberapa lapisan tersembunyi dan fungsi aktivasi. MLP menggunakan propagasi maju untuk input dan propagasi balik untuk memperbarui bobot. MLP adalah jaringan saraf dasar yang telah meletakkan dasar untuk visi komputer, teknologi bahasa, dan jaringan saraf lainnya. 
+
+**Jaringan Syaraf Tiruan (CNN)**
+
+Convolution Neural Networks (CNN) umumnya digunakan dalam visi komputer, pengenalan gambar, dan pengenalan pola. Jaringan ini digunakan untuk mengekstraksi fitur-fitur penting dari gambar dengan menggunakan beberapa lapisan konvolusi. Lapisan konvolusi dalam CNN menggunakan matriks khusus (filter) untuk membelitkan gambar dan membuat peta. 
+
+Secara umum, Jaringan Syaraf Tiruan Konvolusi terdiri dari lapisan input, lapisan konvolusi, lapisan penyatuan, lapisan yang terhubung penuh, dan lapisan output. Baca tutorial Jaringan Syaraf Tiruan (CNN) Python dengan TensorFlow untuk mempelajari lebih lanjut tentang cara kerja CNN. 
+
+**Jaringan Syaraf Tiruan (RNN)**
+
+Recurrent Neural Networks (RNN) biasanya digunakan untuk data berurutan seperti teks, urutan gambar, dan deret waktu. Jaringan ini mirip dengan jaringan feed-forward, kecuali mereka mendapatkan input dari urutan sebelumnya menggunakan loop umpan balik. RNN digunakan dalam NLP, prediksi penjualan, dan prakiraan cuaca. 
+
+RNN hadir dengan masalah gradien yang menghilang, yang diselesaikan dengan versi lanjutan RNN yang disebut Jaringan Memori Jangka Pendek (LSTM) dan Jaringan Unit Berulang (GRU). 
+
+Secara sederhana, gradien adalah vektor yang menunjukkan arah dan tingkat pertumbuhan terbesar dari suatu fungsi pada suatu titik tertentu.
+
+# Contoh Implementasi ANN
