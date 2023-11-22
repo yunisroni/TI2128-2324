@@ -49,3 +49,162 @@ RNN hadir dengan masalah gradien yang menghilang, yang diselesaikan dengan versi
 Secara sederhana, gradien adalah vektor yang menunjukkan arah dan tingkat pertumbuhan terbesar dari suatu fungsi pada suatu titik tertentu.
 
 # Contoh Implementasi ANN
+
+Penilaian kredit adalah praktik menganalisis latar belakang dan aplikasi kredit seseorang untuk menilai kelayakan kredit orang tersebut. Ada banyak pendekatan yang bisa dilakukan untuk menganalisis kelayakan kredit ini. Pada akhirnya, pada dasarnya hal ini bermuara pada pemilihan variabel independen yang tepat (misalnya pendapatan, usia, jenis kelamin) yang mengarah pada tingkat kelayakan kredit. Dengan kata lain: 
+
+_kelayakan kredit = f (pendapatan, usia, jenis kelamin, ...)_
+
+```{r}
+# Load Library
+library(keras)
+library(tidyverse)
+library(Metrics)
+```
+
+## Load Dataset
+
+```{r}
+dataset <- read.csv("data/garments_worker_productivity.csv")
+head(dataset)
+```
+
+```{r}
+glimpse(dataset)
+```
+## EDA
+
+```{r}
+# Melihat data missing value
+colSums(is.na(dataset))
+```
+
+```{r}
+# Menghapus data missing value
+dataset <- na.omit(dataset)
+colSums(is.na(dataset))
+```
+```{r}
+glimpse(dataset)
+```
+
+
+## Partisi Data
+
+```{r}
+# partisi dataset menjadi data training dan testing
+train_data <- dataset[1:400,]
+test_data <- dataset[401:691,]
+```
+
+## Feature Importance Analysis
+
+```{r}
+# Uji Korelasi
+library(corrplot)
+
+
+dataset_cor <- cor(dataset[,5:15])
+corrplot(dataset_cor, method = "color", addCoef.col = "red")
+```
+
+
+
+```{r}
+# Menentukan variabel respons dan prediktor
+response_variable <- "actual_productivity"
+predictor_variables <- c("targeted_productivity", "wip", "incentive")
+```
+
+```{r}
+# Membagi dataset menjadi set pelatihan dan set pengujian (sudah terpisah)
+set.seed(123)  # Untuk reproduktibilitas
+training_data <- train_data
+testing_data <- test_data
+```
+
+```{r}
+# Membuat model ANN
+model <- keras_model_sequential() %>%
+  layer_dense(units = 64, activation = "relu", input_shape = length(predictor_variables)) %>%
+  layer_dense(units = 32, activation = "relu") %>%
+  layer_dense(units = 1,)  # Output layer tanpa aktivasi untuk regresi
+```
+
+```{r}
+# Menentukan fungsi kerugian (loss function) dan optimizer
+model %>% compile(
+  loss = "mean_squared_error",
+  optimizer = optimizer_adam(),
+  metrics = c("mean_squared_error")
+)
+```
+
+```{r}
+# Melatih model
+history <- model %>% fit(
+  x = as.matrix(training_data[, predictor_variables]),
+  y = training_data[[response_variable]],
+  epochs = 100,  # Jumlah iterasi pelatihan
+  validation_split = 0.2,  # Pembagian data validasi
+  verbose = 1
+)
+```
+
+```{r}
+# Melakukan prediksi pada set pengujian
+predictions_ann <- predict(model, as.matrix(testing_data[, predictor_variables]))
+```
+
+```{r}
+# Visualisasi hasil prediksi
+result_data_ann <- data.frame(Productivity = testing_data$actual_productivity, Predictions = predictions_ann)
+
+ggplot(data = result_data_ann, aes(x = Productivity, y = Predictions)) +
+  geom_point() +
+  geom_abline(intercept = 0, slope = 1, color = "red", linetype = "dashed") +
+  labs(x = "Actual Productivity", y = "Predicted Productivity") +
+  scale_x_continuous(labels = scales::comma) +
+  scale_y_continuous(labels = scales::comma) +
+  ggtitle("Comparison of Actual Productivity and ANN Model Prediction") +
+  theme_minimal()
+```
+
+```{r}
+# Buat grafik garis
+ggplot(data = result_data_ann, aes(x = 1:length(testing_data$actual_productivity))) +
+  geom_line(aes(y = testing_data$actual_productivity, color = "Actual"), size = 1) +
+  geom_line(aes(y = predictions_ann, color = "ANN Prediction"), size = 1) +
+  labs(x = "Observation", y = "Productivity") +
+  scale_color_manual(values = c("Actual" = "blue", "ANN Prediction" = "red")) +
+  ggtitle("Comparison of Actual Productivity and ANN Model Prediction") +
+  scale_y_continuous(labels = scales::comma) +
+  theme_minimal()
+```
+```{r}
+head(result_data_ann, 10)
+```
+
+
+
+
+```{r}
+# Evaluasi ANN Model
+
+# Hitung MAE
+mae_value_ann <- mae(testing_data$actual_productivity, predictions_ann)
+
+# Hitung MSE
+mse_value_ann <- mse(testing_data$actual_productivity, predictions_ann)
+
+# Hitung RMSE
+rmse_value_ann <- rmse(testing_data$actual_productivity, predictions_ann)
+
+# Hitung MAPE
+mape_value_ann <- mape(testing_data$actual_productivity, predictions_ann)
+
+# Tampilkan hasil evaluasi
+cat(paste("MAE: ", mae_value_ann, "\n"))
+cat(paste("MSE: ", mse_value_ann, "\n"))
+cat(paste("RMSE: ", rmse_value_ann, "\n"))
+cat(paste("MAPE: ", mape_value_ann, "%\n"))
+```
