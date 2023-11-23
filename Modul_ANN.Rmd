@@ -24,7 +24,7 @@ Algoritme deep learning atau deep naural network terdiri dari beberapa lapisan t
 
 Beberapa jenis jaringan saraf digunakan untuk aplikasi pembelajaran mesin tingkat lanjut. Tidak ada satu model arsitektur yang cocok untuk semua. Jenis jaringan saraf tertua dikenal sebagai Perceptron, yang dibuat oleh Frank Rosenblatt pada tahun 1958. 
 
-Pada bagian ini, kita akan membahas 5 jenis jaringan saraf yang paling populer yang digunakan dalam industri teknologi. 
+Pada bagian ini, kita akan membahas 4 jenis jaringan saraf yang paling populer yang digunakan dalam industri teknologi dan bisnis . 
 
 **Jaringan Syaraf Tiruan Feedforward**
 
@@ -38,7 +38,7 @@ Multi-Layer Perceptron (MLP) mengatasi kekurangan jaringan saraf feedforward yan
 
 Convolution Neural Networks (CNN) umumnya digunakan dalam visi komputer, pengenalan gambar, dan pengenalan pola. Jaringan ini digunakan untuk mengekstraksi fitur-fitur penting dari gambar dengan menggunakan beberapa lapisan konvolusi. Lapisan konvolusi dalam CNN menggunakan matriks khusus (filter) untuk membelitkan gambar dan membuat peta. 
 
-Secara umum, Jaringan Syaraf Tiruan Konvolusi terdiri dari lapisan input, lapisan konvolusi, lapisan penyatuan, lapisan yang terhubung penuh, dan lapisan output. Baca tutorial Jaringan Syaraf Tiruan (CNN) Python dengan TensorFlow untuk mempelajari lebih lanjut tentang cara kerja CNN. 
+Secara umum, Jaringan Syaraf Tiruan Konvolusi terdiri dari lapisan input, lapisan konvolusi, lapisan penyatuan, lapisan yang terhubung penuh, dan lapisan output.  
 
 **Jaringan Syaraf Tiruan (RNN)**
 
@@ -50,15 +50,45 @@ Secara sederhana, gradien adalah vektor yang menunjukkan arah dan tingkat pertum
 
 # Contoh Implementasi ANN
 
-Penilaian kredit adalah praktik menganalisis latar belakang dan aplikasi kredit seseorang untuk menilai kelayakan kredit orang tersebut. Ada banyak pendekatan yang bisa dilakukan untuk menganalisis kelayakan kredit ini. Pada akhirnya, pada dasarnya hal ini bermuara pada pemilihan variabel independen yang tepat (misalnya pendapatan, usia, jenis kelamin) yang mengarah pada tingkat kelayakan kredit. Dengan kata lain: 
+Dataset "Garment Worker Productivity" adalah kumpulan data yang digunakan untuk memahami dan memprediksi produktivitas pekerja di industri garmen atau pakaian. Dataset ini dapat digunakan untuk melatih model prediksi produktivitas berdasarkan berbagai fitur atau faktor yang mungkin mempengaruhi kinerja pekerja.
 
-_kelayakan kredit = f (pendapatan, usia, jenis kelamin, ...)_
+Berikut adalah beberapa variabel ada dalam dataset ini berdasarkan deskripsi yang telah Anda berikan:
+
+_date_: Tanggal pengamatan atau catatan.
+
+_quarter_: Kuartal atau periode waktu tertentu di dalam tahun.
+
+_department_: Departemen tempat pekerja bekerja, seperti "sweing" atau "finishing".
+
+_day_: Hari dalam seminggu di mana pengamatan dilakukan, seperti "Thursday".
+
+_team_: Nomor tim atau kelompok kerja pekerja.
+
+_targeted_productivity_: Produktivitas yang ditargetkan atau standar produktivitas yang diharapkan.
+
+_smv (Standard Minute Value)_: Nilai menit standar yang menggambarkan waktu standar yang diperlukan untuk menyelesaikan satu unit pekerjaan.
+
+_wip (Work in Progress)_: Jumlah pekerjaan yang sedang berlangsung atau belum selesai.
+
+_over_time_: Jumlah waktu kerja tambahan yang dihabiskan.
+
+_incentive_: Insentif atau bonus yang mungkin diberikan kepada pekerja.
+
+_idle_time_: Waktu ketidakaktifan atau waktu yang tidak digunakan untuk produksi.
+
+_idle_men_: Jumlah pekerjaan yang tidak aktif atau pekerja yang tidak produktif.
+
+_no_of_style_change_: Jumlah perubahan gaya atau desain.
+
+_no_of_workers_: Jumlah pekerja yang terlibat dalam produksi.
+
+_actual_productivity_: Produktivitas aktual yang diukur atau dicatat.
 
 ```{r}
 # Load Library
-library(keras)
-library(tidyverse)
-library(Metrics)
+library(keras) #library untuk ANN
+library(tidyverse) #library yang berisikan 3 library (dplyr, ggplot2, lubridate): Manipulasi data, visualisasi dan manipulasi tanggal
+library(Metrics) #library yang digunakan untuk mengukur kinerja dari model prediksi (Akurasi)
 ```
 
 ## Load Dataset
@@ -71,7 +101,7 @@ head(dataset)
 ```{r}
 glimpse(dataset)
 ```
-## EDA
+## Exploration Data Analyisis (EDA)
 
 ```{r}
 # Melihat data missing value
@@ -83,6 +113,8 @@ colSums(is.na(dataset))
 dataset <- na.omit(dataset)
 colSums(is.na(dataset))
 ```
+
+
 ```{r}
 glimpse(dataset)
 ```
@@ -104,16 +136,22 @@ library(corrplot)
 
 
 dataset_cor <- cor(dataset[,5:15])
+dataset_cor
 corrplot(dataset_cor, method = "color", addCoef.col = "red")
 ```
 
-
+## Model
 
 ```{r}
 # Menentukan variabel respons dan prediktor
 response_variable <- "actual_productivity"
-predictor_variables <- c("targeted_productivity", "wip", "incentive")
+predictor_variables <- c("targeted_productivity","wip","incentive", "no_of_workers")
 ```
+
+#Latihan
+Tambahkan variabel predictor yang lain sebagai variabel prediktor dan lakukan pengujian model
+
+
 
 ```{r}
 # Membagi dataset menjadi set pelatihan dan set pengujian (sudah terpisah)
@@ -181,25 +219,25 @@ ggplot(data = result_data_ann, aes(x = 1:length(testing_data$actual_productivity
   theme_minimal()
 ```
 ```{r}
-head(result_data_ann, 10)
+head(result_data_ann, 20)
 ```
 
-
+## Evaluasi Model
 
 
 ```{r}
 # Evaluasi ANN Model
 
-# Hitung MAE
+# Hitung MAE (Mean Absolute Error)
 mae_value_ann <- mae(testing_data$actual_productivity, predictions_ann)
 
-# Hitung MSE
+# Hitung MSE (Mean Squared Error)
 mse_value_ann <- mse(testing_data$actual_productivity, predictions_ann)
 
-# Hitung RMSE
+# Hitung RMSE (Root Mean Square Error)
 rmse_value_ann <- rmse(testing_data$actual_productivity, predictions_ann)
 
-# Hitung MAPE
+# Hitung MAPE (Mean Absolute Percent Error)
 mape_value_ann <- mape(testing_data$actual_productivity, predictions_ann)
 
 # Tampilkan hasil evaluasi
