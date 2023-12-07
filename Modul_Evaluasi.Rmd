@@ -1,0 +1,455 @@
+---
+title: "Modul_Evaluasi"
+author: "Roni Yunis"
+date: "2023-12-06"
+output:
+---
+
+# Konsep Evaluasi dan Optimisasi
+
+**Evaluasi:**
+Evaluasi adalah proses penilaian atau pengukuran terhadap kinerja atau efektivitas suatu sistem, strategi, atau model. Dalam konteks model prediksi atau machine learning, evaluasi dilakukan untuk mengukur seberapa baik model tersebut dapat memenuhi tujuan atau kebutuhan tertentu. Evaluasi model dapat melibatkan penggunaan metrik performansi seperti akurasi, presisi, sensitivitas, atau metrik lainnya yang sesuai dengan karakteristik masalah yang dihadapi.
+
+**Optimisasi:**
+Optimisasi, di sisi lain, merujuk pada usaha untuk meningkatkan atau mengoptimalkan kinerja suatu sistem atau model. Dalam konteks machine learning, optimisasi seringkali melibatkan pencarian parameter terbaik (hyperparameter tuning) atau penyesuaian model untuk mencapai hasil yang lebih baik. Misalnya, menggunakan algoritma optimisasi seperti _random search_ atau _grid search_ untuk menemukan kombinasi hyperparameter terbaik yang meningkatkan performa model.
+
+Secara umum, evaluasi dan optimisasi bekerja bersamaan. Pertama, model dievaluasi untuk memahami sejauh mana model berhasil memenuhi kriteria performansi yang diinginkan. Selanjutnya, berdasarkan hasil evaluasi, langkah-langkah optimisasi dapat diambil untuk meningkatkan kinerja model tersebut. Proses ini dapat dilakukan secara iteratif hingga mencapai tingkat kinerja yang diinginkan atau dapat diterima.
+
+Metrik performansi dalam konteks model prediksi adalah ukuran atau indikator yang digunakan untuk mengevaluasi seberapa baik model dapat melakukan prediksi atau klasifikasi pada data yang tidak digunakan dalam pelatihan. Metrik ini memberikan gambaran tentang seberapa efektif model dalam memahami pola dalam data dan menghasilkan prediksi yang akurat. Beberapa metrik performansi umum untuk model prediksi meliputi:
+
+1. **Akurasi (Accuracy):** Rasio prediksi yang benar terhadap jumlah total prediksi. 
+
+2. **Presisi (Precision):** Ukuran dari seberapa baik model dapat memprediksi positif. Diukur sebagai rasio prediksi positif yang benar terhadap total prediksi positif
+
+3. **Sensitivitas (Recall atau True Positive Rate):** Rasio dari instance positif yang terdeteksi oleh model. Diukur sebagai rasio True Positives terhadap total positif
+
+4. **Spesifisitas (Specificity):** Rasio dari instance negatif yang terdeteksi dengan baik oleh model. Diukur sebagai rasio True Negatives terhadap total negatif
+
+5. **F1-Score:** Rata-rata harmonik antara presisi dan sensitivitas. Berguna ketika ada trade-off antara presisi dan sensitivitas
+
+6. **Area di Bawah Kurva ROC (AUC-ROC):** Mengukur seberapa baik model membedakan antara kelas positif dan negatif. Semakin tinggi AUC-ROC, semakin baik modelnya.
+
+7. **Mean Squared Error (MSE):** Metrik umum untuk masalah regresi, mengukur rata-rata kuadrat perbedaan antara prediksi model dan nilai sebenarnya.
+
+8. **Coefficient of Determination (\(R^2\)):** Metrik regresi yang mengukur seberapa baik variabilitas dalam data dapat dijelaskan oleh model.
+
+9. **Mean Absolute Error (MAE):**
+   
+   $$MAE = \frac{1}{n} \sum_{i=1}^{n} |y_i - \hat{y}_i| $$
+   
+   Rata-rata dari nilai absolut dari selisih antara nilai sebenarnya $y_i$ dan nilai prediksi $\hat{y}_i$. MAE memberikan gambaran tentang seberapa besar kesalahan prediksi rata-rata dalam skala asli.
+
+10. **Mean Squared Error (MSE):**
+    $$MSE = \frac{1}{n} \sum_{i=1}^{n} (y_i - \hat{y}_i)^2$$
+   
+   Rata-rata dari kuadrat selisih antara nilai sebenarnya $y_i$ dan nilai prediksi $\hat{y}_i$. MSE memberikan lebih banyak bobot pada kesalahan besar.
+
+11. **Mean Absolute Percentage Error (MAPE):**
+   $$MAPE = \frac{1}{n} \sum_{i=1}^{n} \left( \frac{|y_i - \hat{y}_i|}{|y_i|} \right) \times 100\%$$
+   
+   Rata-rata persentase dari nilai absolut dari selisih antara nilai sebenarnya $y_i$ dan nilai prediksi $\hat{y}_i$, dinormalkan dengan nilai sebenarnya. MAPE memberikan indikasi kesalahan relatif dalam persentase.
+
+12. **Root Mean Squared Error (RMSE):**
+   $$RMSE = \sqrt{\frac{1}{n} \sum_{i=1}^{n} (y_i - \hat{y}_i)^2}$$
+   
+   Akar kuadrat dari MSE. RMSE memberikan ukuran kesalahan yang serupa dengan MAE tetapi memberikan bobot lebih besar pada kesalahan yang lebih besar.
+
+Pilihan metrik tergantung pada konteks dan preferensi spesifik. MAE, MSE, dan RMSE mengukur kesalahan dalam skala asli, sementara MAPE memberikan pengukuran kesalahan relatif dalam persentase. Dalam beberapa kasus, Anda mungkin perlu mempertimbangkan karakteristik spesifik dari masalah regresi yang sedang dihadapi untuk memilih metrik yang sesuai. Pemilihan metrik performansi tergantung pada tipe masalah dan tujuan spesifik dari model prediksi yang sedang dievaluasi.
+
+    
+# Load Library
+```{r}
+# library manipulasi data, tanggal dan visualisasi
+library(tidyverse)
+# library untuk model SVR Regression
+library(e1071)
+# library untuk partisi dataset
+library(caret)
+```
+
+
+# Obstain/Import Dataset
+```{r}
+sales <- read.csv("data/sales_dataset.csv")
+glimpse(sales)
+```
+# Scrub Data
+```{r}
+# Memeriksa data NA's
+colSums(is.na(sales))
+```
+
+```{r}
+# melihat summary data
+summary(sales)
+```
+
+```{r}
+# merubah nama variabel agar mudah dibaca dan digunakan
+names(sales)[names(sales) == "marketing_budget.thousands."] <- "marketing_budget"
+names(sales)[names(sales) == "actual_sales.millions."] <- "actual_sales"
+```
+
+# Ekplorasi Data Analysis
+
+```{r}
+glimpse(sales)
+```
+marketing_budget adalah anggaran marketing dan actual_sales adalah nilai penjualan yang sebenarnya.
+
+**Tujuan analisis adalah**: mengembangkan model prediksi untuk memperkirakan nilai penjualan berdasarkan anggaran marketing yang dikeluarkan. 
+
+```{r}
+# melihat korelasi antar variabel
+cor(sales)
+```
+
+```{r}
+# melihat plot nilai penjualan dibandingkan dengan anggaran marketing yang dikeluarkan
+ggplot(data = sales, aes(x = marketing_budget, y = actual_sales)) +
+  geom_point() +
+  geom_abline(intercept = 0, slope = 1, color = "red", linetype = "dashed") +
+  scale_x_continuous(labels = scales::comma) +
+  scale_y_continuous(labels = scales::comma) +
+  labs(x = "Marketing Budget (Thousands)", y = "Actual Sales (Millions)") +
+  ggtitle("Perbandingan Nilai Penjualan dengan Anggaran Marketing") +
+  theme_minimal()
+```
+
+
+# Model
+
+```{r}
+# Menyiapkan data pelatihan dan data pengujian
+set.seed(123)  # Untuk hasil yang dapat direproduksi
+splitIndex <- createDataPartition(sales$actual_sales, p = 0.7, list = FALSE)
+data_train <- sales[splitIndex, ]  # Data pelatihan (70%)
+data_test <- sales[-splitIndex, ]  # Data pengujian (30%)
+dim(data_train)
+dim(data_test)
+```
+
+## Model Regresi
+```{r}
+# Analisis regresi untuk variabel marketing_budget terhap actual_sales
+
+lm.r <- lm(actual_sales ~ marketing_budget,
+           data = data_train)
+summary(lm.r)
+```
+Persamaan Regresi:
+$$y = \beta0 + \beta1.x + \epsilon$$
+Menjadi:
+$$actual_sales = 3.431313 + 0.049020*marketing_budget + \epsilon$$
+Misalkan marketing_budget = Rp.15000
+
+```{r}
+actual_sales <- 3.431313 + (0.049020*15000)
+actual_sales
+```
+```{r}
+head(data_test)
+```
+
+
+
+
+```{r}
+# prediksi dengan data testing
+y_prediksi <- predict(lm.r, newdata = data_test)
+head(y_prediksi)
+```
+
+```{r}
+# Melihat plot prediksi data training
+
+ggplot() + geom_point(aes(x = data_train$marketing_budget,
+                          y = data_train$actual_sales), colour = 'red') +
+  geom_line(aes(x = data_train$marketing_budget,
+                y = predict( lm.r, newdata = data_train)), colour = 'blue') +
+  ggtitle('Pengaruh Anggaran Marketing terhadap Penjualan Aktual (Data Training)') +
+  xlab('Marketing Budget') +
+  ylab('Actual Sales')
+```
+
+```{r}
+# melihat plot nilai penjualan dibandingkan dengan anggaran marketing yang dikeluarkan
+ggplot(data = data_test, aes(x = marketing_budget, y = actual_sales)) +
+  geom_point() +
+  geom_abline(intercept = 0, slope = 1, color = "red", linetype = "dashed") +
+  scale_x_continuous(labels = scales::comma) +
+  scale_y_continuous(labels = scales::comma) +
+  labs(x = "Marketing Budget (Thousands)", y = "Actual Sales (Millions)") +
+  ggtitle("Perbandingan Nilai Penjualan dengan Anggaran Marketing - Data Test") +
+  theme_minimal()
+```
+
+
+
+```{r}
+# Melihat plot prediksi data testing
+
+ggplot() + geom_point(aes(x = data_test$marketing_budget,
+                          y = data_test$actual_sales), colour = 'red') +
+  geom_line(aes(x = data_test$marketing_budget,
+                y = predict( lm.r, newdata = data_test)), colour = 'blue') +
+  ggtitle('Pengaruh Anggaran Marketing terhadap Penjualan Aktual (Data Testing)') +
+  xlab('Marketing Budget') +
+  ylab('Actual Sales')
+```
+## Evaluasi
+
+**Sum of Squared Errors (SSE)** adalah metrik evaluasi yang mengukur jumlah kuadrat dari selisih antara nilai prediksi dari model regresi dan nilai aktual dalam data. SSE dapat memberikan gambaran tentang seberapa baik model sesuai dengan data.
+
+Dalam konteks regresi linear sederhana, SSE dihitung dengan menjumlahkan kuadrat dari selisih antara nilai prediksi $\hat{Y_i}$ dan nilai aktual $Y_i$ untuk setiap observasi:
+
+$$SSE = \sum_{i=1}^{n} (Y_i - \hat{Y_i})^2$$
+
+Dalam R, Anda dapat mengakses SSE langsung dari objek model regresi menggunakan fungsi `sum(model$residuals^2)`. Semakin kecil nilai SSE, semakin baik modelnya, karena SSE mencerminkan seberapa baik model dapat memperkirakan nilai aktual dalam dataset. Namun, penggunaan SSE sebaiknya selalu dikombinasikan dengan metrik evaluasi lainnya, seperti R-squared, MSE, atau uji lainnya, untuk mendapatkan gambaran yang lengkap tentang kinerja model.
+
+```{r}
+# Menghitung SSE
+sse_r <- sum(lm.r$residuals^2)
+cat("Sum of Squared Errors (SSE):", sse_r, "\n")
+
+```
+**R-Squared**, Nilai R-squared mengindikasikan seberapa besar variasi dalam variabel terikat yang dapat dijelaskan oleh model. Nilai R-squared berkisar antara 0 (model tidak menjelaskan variasi sama sekali) hingga 1 (model menjelaskan seluruh variasi). Anda dapat menghitung R-squared (koefisien determinasi) dari model regresi linear sederhana menggunakan fungsi `summary()` pada objek model
+
+```{r}
+# Mengitung R-Square
+model.summary <- summary(lm.r)
+r_squared <- model.summary$r.squared
+cat("R-squared:", r_squared, "\n")
+```
+
+**Mean Squared Error (MSE)** Menghitung MSE dapat memberikan gambaran tentang seberapa baik model dapat menjelaskan variasi dalam data. Semakin rendah MSE dan semakin tinggi $R^2$, semakin baik modelnya.
+
+```{r}
+# Menghitung MSE
+mse <- mean(lm.r$residuals^2)
+cat("Mean Squared Error (MSE):", mse, "\n")
+```
+
+Metode evaluasi ini memberikan pandangan holistik tentang kinerja model regresi linear sederhana, dan pemilihan metode yang sesuai tergantung pada kebutuhan spesifik analisis Anda.
+
+## Model SVR Regression
+
+Model-1
+```{r}
+# Membuat model SVR
+svr_model_1 <- svm(actual_sales ~ marketing_budget, 
+                 data = data_train, 
+                 kernel = "radial",
+                 epsilon = 0.01,
+                 gamma = 0.1,
+                 cost = 1)
+
+svr_model_1
+```
+```{r}
+head(data_test)
+```
+```{r}
+head(y_prediksi)
+```
+
+
+
+```{r}
+# Melakukan prediksi dengan Data Testing
+predictions_svr_1 <- predict(svr_model_1, data_test)
+head(predictions_svr_1)
+```
+
+```{r}
+# Visualisasi hasil prediksi
+result_data_svr_1 <- data.frame(sales = data_test$actual_sales, Predictions = predictions_svr_1)
+
+# Visualisasi Perbandingan Produksi Aktual dengan Hasil Prediksi
+ggplot(data = result_data_svr_1, aes(x = sales, y = Predictions)) +
+  geom_point() +
+  geom_abline(intercept = 0, slope = 1, color = "red", linetype = "dashed") +
+  labs(x = "Penjualan Aktual (Millions)", y = "Prediksi Penjualan (Millions)") +
+  scale_x_continuous(labels = scales::comma) +
+  scale_y_continuous(labels = scales::comma) +
+  ggtitle("Perbandingan Penjualan Aktual dan Prediksi Penjualan dengan Model SVR-1") +
+  theme_minimal()
+
+# Buat grafik garis dengan ggplot2
+ggplot(data = result_data_svr_1, aes(x = 1:length(sales))) +
+  geom_line(aes(y = sales, color = "Aktual"), size = 1) +
+  geom_line(aes(y = Predictions, color = "Prediksi"), size = 1) +
+  labs(x = "Observasi", y = "Penjualan (Millions)") +
+  scale_color_manual(values = c("Aktual" = "blue", "Prediksi" = "red")) +
+  ggtitle("Perbandingan Penjualan Aktual dan Prediksi Penjualan dengan Model SVR-1") +
+  scale_y_continuous(labels = scales::comma) +
+  theme_minimal()
+```
+
+## Evaluasi
+
+```{r}
+# Evaluasi SVR Model
+library(Metrics)
+
+# Hitung MAE
+mae_value_svr_1 <- mae(data_test$actual_sales, predictions_svr_1)
+
+# Hitung MSE
+mse_value_svr_1 <- mse(data_test$actual_sales, predictions_svr_1)
+
+# Hitung RMSE
+rmse_value_svr_1 <- rmse(data_test$actual_sales, predictions_svr_1)
+
+# Hitung MAPE
+mape_value_svr_1 <- mape(data_test$actual_sales, predictions_svr_1)
+
+# Tampilkan hasil evaluasi
+cat(paste("MAE: ", mae_value_svr_1, "\n"))
+cat(paste("MSE: ", mse_value_svr_1, "\n"))
+cat(paste("RMSE: ", rmse_value_svr_1, "\n"))
+cat(paste("MAPE: ", mape_value_svr_1, "%\n"))
+```
+```{r}
+# MSE dari model Regresi
+mse
+```
+
+# Optimisasi Model dengan Hyperparameter Tuning
+
+```{r}
+sales_svr <- sales
+
+# Set seed untuk reproduktibilitas
+set.seed(123)
+
+# Data
+n <- 100
+sales_svr <- data.frame(
+  X1 = rnorm(n),
+  X2 = rnorm(n),
+  Y = 0.5 * rnorm(n) + 2 * rnorm(n, mean = 1)
+)
+
+# Split dataset menjadi data pelatihan dan data uji
+train_indices <- sample(seq_len(n), size = 0.7 * n)
+train_data <- sales_svr[train_indices, ]
+test_data <- sales_svr[-train_indices, ]
+
+# Menetapkan variabel respons dan prediktor
+response_variable <- "Y"
+predictor_variables <- setdiff(names(train_data), response_variable)
+
+# Membuat grid hyperparameter untuk Random Search pada SVR
+hyperparameter_grid <- expand.grid(
+  cost = 10^runif(10, -2, 2),  # Contoh variasi nilai cost (log scale)
+  gamma = 10^runif(10, -2, 2)  # Contoh variasi nilai gamma (log scale)
+)
+
+# Melakukan Random Search dengan model SVM
+best_rmse <- Inf
+best_svr_model <- NULL
+
+for (i in 1:nrow(hyperparameter_grid)) {
+  # Membuat model SVM dengan parameter tertentu
+  svm_model <- svm(
+    formula = Y ~ .,
+    data = train_data,
+    cost = hyperparameter_grid$cost[i],
+    gamma = hyperparameter_grid$gamma[i]
+  )
+
+  # Prediksi pada data uji
+  predictions <- predict(svm_model, newdata = test_data)
+
+  # Evaluasi model
+  rmse <- sqrt(mean((test_data$Y - predictions)^2))
+
+  # Memperbarui model terbaik jika ditemukan
+  if (rmse < best_rmse) {
+    best_rmse <- rmse
+    best_svm_model <- svm_model
+  }
+}
+
+# Menampilkan model terbaik
+best_svm_model
+
+# Prediksi pada data uji menggunakan model terbaik
+predictions <- predict(best_svm_model, newdata = test_data)
+
+# Evaluasi model terbaik (gantilah dengan metrik evaluasi yang sesuai untuk regresi)
+rmse <- sqrt(mean((test_data$Y - predictions)^2))
+cat("RMSE:", rmse, "\n")
+```
+Model-2
+
+
+```{r}
+# Membuat model SVR
+svr_model_2 <- svm(actual_sales ~ marketing_budget, 
+                 data = data_train, 
+                 kernel = "linear",
+                 epsilon = 0.01,
+                 gamma = 0.01,
+                 cost = 1)
+
+svr_model_2
+```
+```{r}
+# Melakukan prediksi dengan Data Testing
+predictions_svr_2 <- predict(svr_model_2, data_test)
+head(predictions_svr_2)
+```
+
+```{r}
+head(data_test$actual_sales)
+```
+```{r}
+# Visualisasi hasil prediksi
+result_data_svr_2 <- data.frame(sales = data_test$actual_sales, Predictions = predictions_svr_2)
+
+# Visualisasi Perbandingan Produksi Aktual dengan Hasil Prediksi
+ggplot(data = result_data_svr_2, aes(x = sales, y = Predictions)) +
+  geom_point() +
+  geom_abline(intercept = 0, slope = 1, color = "red", linetype = "dashed") +
+  labs(x = "Penjualan Aktual (Millions)", y = "Prediksi Penjualan (Millions)") +
+  scale_x_continuous(labels = scales::comma) +
+  scale_y_continuous(labels = scales::comma) +
+  ggtitle("Perbandingan Penjualan Aktual dan Prediksi Penjualan dengan Model SVR-2") +
+  theme_minimal()
+
+# Buat grafik garis dengan ggplot2
+ggplot(data = result_data_svr_2, aes(x = 1:length(sales))) +
+  geom_line(aes(y = sales, color = "Aktual"), size = 1) +
+  geom_line(aes(y = Predictions, color = "Prediksi"), size = 1) +
+  labs(x = "Observasi", y = "Penjualan (Millions)") +
+  scale_color_manual(values = c("Aktual" = "blue", "Prediksi" = "red")) +
+  ggtitle("Perbandingan Penjualan Aktual dan Prediksi Penjualan dengan Model SVR-2") +
+  scale_y_continuous(labels = scales::comma) +
+  theme_minimal()
+```
+
+```{r}
+# Evaluasi SVR Model
+library(Metrics)
+
+# Hitung MAE
+mae_value_svr_2 <- mae(data_test$actual_sales, predictions_svr_2)
+
+# Hitung MSE
+mse_value_svr_2 <- mse(data_test$actual_sales, predictions_svr_2)
+
+# Hitung RMSE
+rmse_value_svr_2 <- rmse(data_test$actual_sales, predictions_svr_2)
+
+# Hitung MAPE
+mape_value_svr_2 <- mape(data_test$actual_sales, predictions_svr_2)
+
+# Tampilkan hasil evaluasi
+cat(paste("MAE: ", mae_value_svr_2, "\n"))
+cat(paste("MSE: ", mse_value_svr_2, "\n"))
+cat(paste("RMSE: ", rmse_value_svr_2, "\n"))
+cat(paste("MAPE: ", mape_value_svr_2, "%\n"))
+```
+
