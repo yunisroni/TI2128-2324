@@ -1,0 +1,307 @@
+---
+title: "Modul_NLP"
+author: "Roni Yunis"
+date: "2023-12-11"
+output:
+---
+
+**NLP** atau _Natural Language Processing_ adalah cabang dari kecerdasan buatan yang fokus pada interaksi antara komputer dan bahasa manusia yang alami. NLP merupakan suatu teknik dalam Machine Learning (ML) yang memfokuskan pada pemahaman dan pengaplikasian hubungan antara bahasa manusia dengan komputer. Penerapan NLP melibatkan penggunaan model ML pada teks atau bahasa, termasuk juga dalam konteks pengolahan bahasa suara. **Tujuan utamanya** adalah memungkinkan komputer untuk memahami, memproses, dan menghasilkan bahasa manusia dengan cara yang bermakna.
+
+Contoh penerapan NLP dalam bidang bisnis meliputi:
+
+1. **Analisis Sentimen Pelanggan:**
+   - NLP digunakan untuk menganalisis sentimen pelanggan dari ulasan produk atau layanan di media sosial, forum, atau situs web.
+   - Perusahaan dapat memahami apakah umpan baliknya positif, negatif, atau netral, membantu mereka memperbaiki produk atau layanan mereka.
+
+2. **Chatbots dan Layanan Pelanggan Otomatis:**
+   - Implementasi chatbot menggunakan NLP memungkinkan perusahaan untuk memberikan layanan pelanggan otomatis 24/7.
+   - Chatbot dapat memahami pertanyaan atau keluhan pelanggan dan memberikan jawaban yang sesuai.
+
+3. **Analisis Teks Bisnis:**
+   - NLP digunakan untuk menganalisis dokumen bisnis seperti laporan keuangan, kontrak, dan dokumen hukum.
+   - Hal ini membantu dalam ekstraksi informasi penting, identifikasi tren, dan memahami konteks dokumen.
+
+4. **Pemrosesan Bahasa Alami di E-commerce:**
+   - NLP membantu meningkatkan pencarian produk dengan memahami pertanyaan pengguna dan memberikan hasil yang lebih relevan.
+   - Sistem rekomendasi juga dapat menggunakan NLP untuk memahami preferensi pelanggan dan menyarankan produk yang sesuai.
+
+5. **Pemrosesan Permintaan dan Analisis Data:**
+   - Dalam konteks bisnis, NLP dapat digunakan untuk memproses permintaan dari pelanggan atau mitra bisnis dan mengekstrak informasi yang relevan dari dokumen atau email.
+
+6. **Analisis Kontrak dan Hukum:**
+   - NLP membantu perusahaan dalam menganalisis kontrak dan dokumen hukum dengan cepat dan efisien, membantu dalam pemahaman ketentuan kontrak dan identifikasi risiko potensial.
+
+7. **Pemahaman Pengguna pada Platform Digital:**
+   - NLP digunakan untuk meningkatkan pengalaman pengguna pada platform digital dengan memahami dan merespons pertanyaan atau perintah yang diajukan oleh pengguna.
+
+Implementasi NLP dalam konteks bisnis membantu perusahaan meningkatkan efisiensi operasional, memahami kebutuhan pelanggan, dan mengoptimalkan strategi berdasarkan analisis bahasa manusia.
+
+Beberapa pustaka (library) yang digunakan dalam teknik NLP antara lain:
+
+1. **Spacy**
+2. **Standford NLP**
+3. **OpenNLP**
+4. **Natural Language Toolkit (NLTK)**
+
+Dalam pembelajaran NLP kali ini, kita akan menggunakan NLTK karena dianggap sebagai pilihan yang paling lengkap dan handal, walaupun tentu saja hal ini bersifat subjektif.
+
+Salah satu aplikasi NLTK yang berguna adalah kemampuannya untuk memecah kalimat ke dalam struktur yang lebih rinci, seperti subjek, predikat, objek, keterangan, konjungsi, kata sifat, dan lainnya. 
+
+Ilustrasinya, misal kalimat “Pierre Vinken 61 years old will join the board as a nonexecutive director Nov. 29.”, jika dijabarkan dengan teknik NLTK dapat dilihat seperti gambar berikut ini.
+
+```{r fig.width=2, echo=FALSE}
+knitr::include_graphics(path = "image/sentences-tree.jpg") # www.nltk.org
+```
+
+Kali ini, kita akan menggali lebih dalam tentang Model _Bag of Words_ dalam konteks NLP. Model ini dirancang untuk mengambil fitur dari suatu teks atau dokumen dengan cara mengekstraksi informasi penting. Fitur-fitur yang diambil kemudian dapat diterapkan untuk melatih algoritma Machine Learning. Akhirnya, model ini menghasilkan vocabularies berupa kata-kata unik yang muncul di seluruh dokumen atau teks dalam training set.
+
+**Studi Kasus**
+Anggaplah Anda sekarang memiliki seorang klien. Klien Anda tersebut seorang pemilik restoran. Klien ini secara konsisten meminta pelanggan untuk memberikan penilaian daring terhadap masakan dan pengalaman bersantap di restorannya. Kita memiliki sejumlah ulasan dalam bentuk kalimat dan skor, di mana skor 0 mengindikasikan penilaian negatif dan skor 1 mengindikasikan penilaian positif. Semua data tersebut disimpan dalam dataset Review_restoran.tsv. Format tsv ini memisahkan antara komentar dengan 0/1 melalui sebuah tab. Dalam format _bag of words_ adalah format yang tepat adalah tsv karena kalimat disusun dalam satu kesatuan, bukan dalam bentuk koma seperti format csv. atau berkata (satu kata satu kolom). 
+
+# Obstain/Import Data
+```{r}
+dataset <- read.delim("data/Review_restoran.tsv", 
+                      quote = '', 
+                      stringsAsFactors = FALSE)
+
+head(dataset)
+```
+
+# Scrub and EDA
+
+**library(tm)**
+
+Library `tm` atau text mining digunakan untuk membersihkan, mentransformasi dan menganalisis data teks.
+Library `tm` (text mining) dalam R memiliki fungsi utama terkait pemrosesan teks dan pengelolaan data teks. Beberapa fungsi kunci dari library `tm` dalam tugas Pemrosesan Bahasa Alami (Natural Language Processing/NLP) adalah sebagai berikut:
+
+1. **Pembuatan Corpus:**
+   - Fungsi `Corpus`: Membantu membuat korpus, yang merupakan kumpulan dokumen teks. Ini adalah struktur dasar untuk mengelola dan menganalisis data teks.
+
+2. **Pembersihan Teks:**
+   - Fungsi `tm_map`: Memungkinkan aplikasi berbagai teknik pembersihan dan pra-pemrosesan teks pada korpus. Ini bisa termasuk penghapusan tanda baca, konversi menjadi huruf kecil, stemming, dan lainnya.
+
+3. **Pembuatan Matrix Dokumen-Term (DTM):**
+   - Fungsi `DocumentTermMatrix`: Mengonversi korpus menjadi matrix dokumen-term, di mana setiap baris mewakili satu dokumen, setiap kolom mewakili istilah unik, dan nilai mewakili frekuensi setiap istilah dalam dokumen yang bersangkutan.
+
+4. **Transformasi Term Frequency-Inverse Document Frequency (TF-IDF):**
+   - Fungsi `weightTfIdf`: Mengubah matrix dokumen-term menjadi matrix TF-IDF, memberikan bobot lebih pada istilah yang penting dalam dokumen tertentu tetapi tidak umum di seluruh dokumen.
+
+5. **Transformasi Teks:**
+   - `tm_map` dengan fungsi transformasi khusus: Memungkinkan berbagai transformasi seperti penghapusan stopwords, stemming, dan tugas pemrosesan teks lainnya.
+
+6. **Pemfilteran Istilah:**
+   - Fungsi `removeSparseTerms`: Membantu menghapus istilah yang jarang muncul atau istilah yang muncul dalam sedikit dokumen, mengurangi dimensionalitas data.
+
+7. **Konversi ke Huruf Kecil:**
+   - `content_transformer(tolower)`: Mengonversi semua teks menjadi huruf kecil, memastikan konsistensi dalam analisis teks.
+
+8. **Penghapusan Stopword:**
+   - Fungsi `removeWords`: Menghapus stopwords umum dari data teks, yaitu kata-kata yang seringkali tidak banyak berkontribusi pada makna teks.
+
+9. **Stemming dan Lemmatization:**
+   - `tm_map` dengan fungsi stemming dan lemmatization khusus: Memungkinkan pengurangan kata menjadi bentuk dasar atau akar, membantu mengkonsolidasikan variasi kata.
+
+10. **Akses ke Metadata Teks:**
+    - Fungsi-fungsi `meta`: Memungkinkan untuk mengakses dan memanipulasi metadata yang terkait dengan dokumen, memberikan informasi tambahan tentang data teks.
+
+Secara keseluruhan, library `tm` adalah alat yang sangat berguna untuk penambangan teks dan NLP dalam lingkungan R, dengan menawarkan berbagai fungsi untuk membersihkan, mentransformasi, dan menganalisis data teks.
+
+**library(SnowballC)**
+
+Library `SnowballC` dalam R adalah salah satu library yang digunakan untuk melakukan stemming, yaitu proses mengubah kata-kata menjadi bentuk dasar atau kata dasar. Fungsi utamanya adalah mempermudah analisis teks dengan mengurangi kata-kata ke bentuk dasarnya.
+
+Berikut adalah fungsi utama dari library `SnowballC`:
+
+1. **Stemming:**
+   - Library `SnowballC` menyediakan algoritma stemming dari proyek Snowball, yang dapat diterapkan pada kata-kata dalam berbagai bahasa. Stemming membantu menghilangkan afiks dan membawa kata-kata ke bentuk dasar, sehingga kata-kata dengan akar yang sama dapat diidentifikasi dengan lebih baik.
+
+Contoh penggunaan library `SnowballC` untuk melakukan stemming:
+
+```{r}
+# Install dan load library
+# Install.packages("SnowballC")
+library(SnowballC)
+
+# Contoh stemming dengan bahasa Inggris
+word <- "running"
+stem <- wordStem(word, language = "en")
+stem
+```
+
+Dalam contoh ini, kata "running" diubah menjadi bentuk dasar "run" menggunakan algoritma stemming dalam bahasa Inggris.
+
+Penting untuk dicatat bahwa fungsi utama dari `SnowballC` adalah untuk memberikan kemampuan stemming dalam berbagai bahasa, yang dapat meningkatkan efektivitas analisis teks, terutama dalam pemrosesan besar-besaran kata-kata dalam dokumen teks.
+
+```{r}
+# Proces cleaning pada  teks
+
+# install atau panggil library(tm) untuk teks mining, membersihkan dan tranformasi data teks
+library(tm)
+
+# Mendefinisikan variabel corpus dengan menggunakan VCorpus, yaitu membaca corpus yang bersifat tidak permanen, dengan data yang dibaca adalah kolom review
+corpus <-  VCorpus(VectorSource(dataset$Review))
+
+# Merubah semua huruf kapital menjadi huruf kecil
+corpus <-  tm_map(corpus, content_transformer(tolower))
+
+# Menghilangkan angka dalam kalimat
+corpus <-  tm_map(corpus, removeNumbers)
+
+# Menghilangkan tanda baca seperti titik, koma, dll
+corpus <-  tm_map(corpus, removePunctuation)
+
+# Membuang kata yang tidak relevan, seperti a, an, dan the dalam bahasa Inggris, dll
+corpus <-  tm_map(corpus, removeWords, stopwords())
+
+# Install library untuk proses stemming (pemakaian kata dasar)
+library(SnowballC)
+
+# Melakukan proses stemming, yaitu mencari kata dasarnya.
+corpus <-  tm_map(corpus, stemDocument)
+
+# Menghilangkan spasi berlebih, sehingga setiap kata dipisahkan dengan satu spasi saja
+corpus <-  tm_map(corpus, stripWhitespace)
+```
+
+```{r}
+# Creating the Bag of Words model
+
+# Mendefinisikan variabel dtm (DocumentTermMatrix), karena untuk bag of words kita memerlukan matrik, sehingga data tabel corpus akan dirubah ke dalam matrik
+
+dtm <-  DocumentTermMatrix(corpus)
+dtm
+```
+```{r}
+# Membuang kata-kata yang kemunculannya hanya sekali, jadi data yang digunakan yang benar-benar relevan saja
+dtm2 <-  removeSparseTerms(dtm, 0.999) # mengurangi data 0.001%
+
+# Merubah format data ke dalam dataframe
+dataset2 <-  as.data.frame(as.matrix(dtm2))
+
+# Mendefinisikan variabel dataset2 pada kolom bernama positif
+dataset2$Positif <-  dataset$Positif
+
+dtm2
+```
+Kita juga bisa melihat bahwa dari hasil di atas kita memiliki 1000 baris dan 691 kolom. Artinya kita memiliki 1000 komentar dan 691 kata yang diekstrak dari semua komentar ini, dan tidak ada satupun kata yang sama.
+
+
+```{r}
+# Encoding the target feature as factor
+dataset2$Positif <-  factor(dataset2$Positif, levels = c(0, 1))
+```
+
+# Model
+
+```{r}
+# Splitting the dataset into the Training set and Test set
+library(caTools)
+
+set.seed(123)
+split = sample.split(dataset2$Positif, SplitRatio = 0.8)
+training_set = subset(dataset2, split == TRUE)
+test_set = subset(dataset2, split == FALSE)
+```
+
+```{r}
+dim(training_set)
+dim(test_set)
+```
+```{r}
+# Fitting Random Forest Classification to the Training set
+library(randomForest)
+
+classifier = randomForest(x = training_set[-692],
+                          y = training_set$Positif,
+                          ntree = 10)
+
+classifier
+```
+```{r}
+# Predicting the Test set results
+y_pred = predict(classifier, newdata = test_set[-692])
+y_pred
+```
+
+#Interpret dan evaluasi
+```{r}
+# Making the Confusion Matrix
+cm <-  table(test_set[, 692], y_pred)
+cm
+```
+Akurasi dari model dalam memprediksi dataset adalah 79,5%
+
+**Latihan**
+Hitunglah nilai _precision_ dan _recall_ dari model tersebut?
+
+
+```{r}
+# Evaluasi model prediksi dengan confusionMatrix
+library(caret)
+
+accuracy <- confusionMatrix(cm)$overall["Accuracy"]
+precision <- confusionMatrix(cm)$byClass["Precision"]
+sensitivity <- confusionMatrix(cm)$byClass["Sensitivity"]
+F1 <- confusionMatrix(cm)$byClass["F1"]
+
+#Menampilkan hasil evaluasi 
+accuracy
+precision
+sensitivity
+F1
+```
+Dari hasil evaluasi model klasifikasi sentiment analysis, dapat disimpulkan:
+
+1. **Akurasi (Accuracy):**
+   - Akurasi model adalah sekitar 79.5%, yang menunjukkan sejauh mana model dapat memprediksi dengan benar dari keseluruhan data uji.
+
+2. **Presisi (Precision):**
+   - Presisi model untuk kelas positif (Positif) adalah sekitar 82%. Ini mengindikasikan bahwa sebagian besar dari yang diprediksi sebagai positif oleh model memang benar-benar positif.
+
+3. **Recall (Sensitivity):**
+   - Recall atau Sensitivity model untuk kelas positif adalah sekitar 78.1%. Ini mengukur sejauh mana model dapat mendeteksi sebagian besar instance yang seharusnya positif.
+
+4. **F1-Score:**
+   - F1-score, yang merupakan harmonic mean dari presisi dan recall, adalah sekitar 80%. Ini memberikan gambaran keseluruhan tentang keseimbangan antara presisi dan recall.
+
+Secara keseluruhan, model memiliki akurasi yang cukup baik dengan presisi dan recall yang seimbang. 
+Kesimpulan: Berdasarkan model klasifikasi atau sentiment analysis ini bisa dikatakan bahwa model dapat mengantisipasi apakah suatu kata dalam setiap ulasan restoran memiliki konotasi positif atau negatif. Pemilik restoran nantinya dapat memanfaatkan model ini untuk meningkatkan pengalaman pelanggan dan lebih mudah mengevaluasi kinerja bisnisnya di masa mendatang.
+
+
+```{r}
+# Validasi Model Prediksi
+
+# Contoh dengan kata bermakna positif dan negatif
+new_data <- c("The food was amazing!", 
+              "The service was terrible.", 
+              "The food good taste.", 
+              "The flavors very bad.", 
+              "Food did not meet expectations", 
+              "Restaurant staff were highly responsive", 
+              "Food prices did not align with the quality.",
+              "The service very slowly!."
+              )
+
+# Scrub dan Transformasi data
+new_corpus <- Corpus(VectorSource(new_data))
+new_corpus <- tm_map(new_corpus, content_transformer(tolower))
+new_corpus <- tm_map(new_corpus, removeNumbers)
+new_corpus <- tm_map(new_corpus, removePunctuation)
+new_corpus <- tm_map(new_corpus, removeWords, stopwords())
+new_corpus <- tm_map(new_corpus, stemDocument)
+new_corpus <- tm_map(new_corpus, stripWhitespace)
+
+new_dtm <- DocumentTermMatrix(new_corpus, control = list(dictionary = Terms(dtm)))
+
+# Siapkan dataset baru untuk evaluasi.
+new_dataset <- as.data.frame(as.matrix(new_dtm))
+
+# Predicting on the New Data
+new_y_pred <- predict(classifier, newdata = new_dataset)
+
+# Visualizing Predictions for New Data
+new_data_df <- data.frame(Review = new_data, Predicted_Positive = new_y_pred)
+new_data_df
+
+```
+
