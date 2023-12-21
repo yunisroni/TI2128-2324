@@ -1,0 +1,149 @@
+---
+title: "Modul_NLP_2"
+author: "Roni Yunis"
+date: "2023-12-14"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Load Library
+```{r}
+# Library manipulasi data, tanggal dan visualisasi
+library(tidyverse)
+
+# Library utk transformasi dan penyesuaian skala grafik
+library(scales)
+
+# Library utk menstrukturisasi data
+library(reshape2)
+
+# Library utk text mining atau analisis teks
+library(tm)
+
+# Library utk stemming (penghapusan akhiran kata)
+library(SnowballC)
+
+# Library utk membuat word cloud
+library(wordcloud)
+
+# Library yg menyediakan palet warna utk visualisasi data
+library(RColorBrewer)
+
+# Library utk manipulasi string yang lebih konsisten
+library(stringr)
+
+# Library utk analisis sentimen dan utk mengekstrak nuansa emosional dari teks
+library(syuzhet) 
+
+```
+
+# Obstain and Import Data
+```{r}
+text <- readLines("data/GBcomments.csv", n = 10000)
+
+#Convert the file to UTF-8 encoding 
+#karakter yang tidak dapat diwakili dengan ASCII akan dihapus dari teks
+s2 <- iconv(text, "UTF-8", "ASCII", sub = "")
+text <- s2
+
+head(text)
+```
+# Scrub and EDA
+```{r}
+#Menyiapkan corpus
+
+docs <- Corpus(VectorSource(text))
+```
+
+```{r}
+#Membersikan data
+
+#mengganti pola tertentu dengan spasi kosong dalam suatu teks
+trans <- content_transformer(function (x , pattern ) gsub(pattern, " ", x))
+
+#menganti "/" dengan spasi kosong
+docs <- tm_map(docs, trans, "/")
+
+#menganti "@" dengan spasi kosong
+docs <- tm_map(docs, trans, "@")
+
+#menganti "\\|" dengan spasi kosong
+docs <- tm_map(docs, trans, "\\|")
+
+#mengkonversi semua huruf ke huruf kecil
+docs <- tm_map(docs, content_transformer(tolower))
+
+#menghapus angka
+docs <- tm_map(docs, removeNumbers)
+
+#menghapus kata-kata umum (stopwords)
+docs <- tm_map(docs, removeWords, stopwords("english"))
+
+#menghapus tanda baca
+docs <- tm_map(docs, removePunctuation)
+
+#menghapus spasi berlebih
+docs <- tm_map(docs, stripWhitespace)
+
+#melakukan stemming atau mengubah kata-kata menjadi bentuk dasar
+docs <- tm_map(docs, stemDocument)
+```
+
+```{r}
+#Membuat dokumen term matrix
+
+dtm <- TermDocumentMatrix(docs)
+mat <- as.matrix(dtm)
+v <- sort(rowSums(mat),decreasing=TRUE)
+
+```
+
+```{r}
+#Konversi ke Data frame
+data <- data.frame(word = names(v),freq=v)
+head(data, 10)
+```
+
+# Model and Visualisasi
+```{r}
+#Membuat wordcloud
+
+set.seed(1056)
+wordcloud(words = data$word, freq = data$freq, min.freq = 1,
+          max.words=200, random.order=FALSE, rot.per=0.35,
+          colors=brewer.pal(8, "Dark2"))
+```
+```{r}
+#mengambil kata2 sentiment dari teks
+
+Sentiment <- get_nrc_sentiment(text)
+head(Sentiment)
+text <- cbind(text,Sentiment)
+```
+
+```{r}
+#Menghitung kata sentiment berdasarkan kategori
+
+TotalSentiment <- data.frame(colSums(text[,c(2:11)]))
+names(TotalSentiment) <- "count"
+TotalSentiment <- cbind("sentiment" = rownames(TotalSentiment), TotalSentiment)
+rownames(TotalSentiment) <- NULL
+
+TotalSentiment
+
+```
+```{r}
+#Menampilkan total sentiment score
+
+ggplot(data = TotalSentiment, aes(x = sentiment, y = count)) +
+  geom_bar(aes(fill = sentiment), stat = "identity") +
+  theme(legend.position = "none") +
+  xlab("Sentiment") + 
+  ylab("Total Count") + 
+  ggtitle("Total Sentiment Score") 
+  
+```
+
